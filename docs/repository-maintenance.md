@@ -22,3 +22,7 @@ The GitHub Actions validation workflow uses Node 24, the committed npm lockfile,
 Environment examples describe variable names only. Configure actual OpenAI, Google, Gmail, webhook, scheduler and Razorpay credentials through approved local or hosted secret settings. Never put them in source, issues, PRs, workflow output or frontend bundles. Keep production database contents and uploaded customer files out of Git.
 
 Keep the current SignalForge theme unless the user explicitly requests a design change. The tracked DESIGN.md describes its visual rules.
+
+## Pending source reconciliation
+
+The first Linux CI run required two missing optional lock entries beneath @rolldown/binding-wasm32-wasi (@emnapi/core and @emnapi/runtime, both 1.10.0). These additions do not upgrade existing dependencies. Carry this package-lock.json repair into the canonical Sites checkout before the next published-source export, or preserve these two records during synchronization. Do not overwrite the repair with the older deployed lockfile. The current live website was not redeployed for this GitHub-only portability correction.

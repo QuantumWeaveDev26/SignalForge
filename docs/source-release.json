@@ -19,7 +19,8 @@
       "docs/repository-maintenance.md",
       "docs/source-release.json"
     ],
-    "lockfile_repair": "Added only missing optional @emnapi/core@1.10.0 and @emnapi/runtime@1.10.0 entries beneath @rolldown/binding-wasm32-wasi for Linux npm ci validation; no existing package versions changed."
+    "lockfile_repair": "Added only missing optional @emnapi/core@1.10.0 and @emnapi/runtime@1.10.0 entries beneath @rolldown/binding-wasm32-wasi for Linux npm ci validation; no existing package versions changed.",
+    "reconciliation_required": "Carry the two optional package-lock records into canonical Sites source before the next release export, or preserve them during synchronization. No live redeploy was performed for this GitHub-only portability fix."
   },
   "verification": {
     "fixture_policy_tests": 98,
