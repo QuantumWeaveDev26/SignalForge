@@ -1,0 +1,7 @@
+'use client';
+import {useEffect,useState} from 'react';
+import {Brand} from './brand';
+import Markdown,{SourceTrail} from './markdown';
+import ThemeToggle from './theme-toggle';
+import {templates} from '@/lib/research';
+export default function SharedReport(){const[report,setReport]=useState<any>(null),[error,setError]=useState('');useEffect(()=>{const token=location.pathname.split('/').pop();fetch('/api/shared/'+token).then(async r=>{const v:any=await r.json();if(!r.ok)throw new Error(v.error);setReport(v);}).catch(e=>setError(e.message));},[]);return <div className="shared-page"><header><Brand/><span>Shared report · read only</span><div><ThemeToggle/><a href="/workspace" className="button button-dark small">Your workspace ↗</a></div></header><main className="panel report-document">{error?<div className="alert">{error}</div>:report?<><div className="report-meta"><span className="report-template"><i aria-hidden="true" className={'glyph g-solid t-'+report.template}/>{templates.find(t=>t.id===report.template)?.name||'Research'} <span>·</span> {report.market}</span></div><h1>{report.title}</h1><p className="report-question">{report.question}</p><Markdown text={report.body} sources={report.sources} anchor="source"/><SourceTrail sources={report.sources} anchor="source" title="Source trail" text={report.body}/><p className="fine-print">AI-assisted research. Citations let you inspect where a claim came from; they do not verify it. Validate findings before making decisions.</p></>:<p>Loading the report…</p>}</main></div>;}

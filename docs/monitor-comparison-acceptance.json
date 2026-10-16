@@ -1,0 +1,39 @@
+{
+  "verifiedOn": "2026-10-16",
+  "scope": "Monitoring history and same-scope launch-time briefing comparisons, preserving the current theme.",
+  "checks": {
+    "regressionTests": 98,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "realAI": {
+      "started": "2026-10-16T08:11:08.616Z",
+      "environment": "Isolated D1/R2 Worker test; actual OpenAI provider",
+      "status": "passed",
+      "monitorId": "9e40ec57-0a4c-4572-8e15-a8d586997967",
+      "sourceCounts": [
+        6,
+        4
+      ],
+      "scanStatuses": [
+        "completed",
+        "completed"
+      ],
+      "reportIds": [
+        "cedc0dd3-ddff-4f3d-8638-a5cea2179ec6",
+        "96818191-b80f-4ea5-91da-83b39500a36c"
+      ],
+      "comparisonState": "matched",
+      "baselineId": "cedc0dd3-ddff-4f3d-8638-a5cea2179ec6",
+      "comparisonSectionPresent": true,
+      "duplicateDispatchCreatedNoReports": true,
+      "completed": "2026-10-16T08:11:58.157Z"
+    }
+  },
+  "limits": [
+    "Real two-scan completion used an isolated Worker database and the actual approved provider; production daily report allowance was already exhausted.",
+    "Legacy reports have no launch-time comparison snapshot and are deliberately not backfilled.",
+    "Citation URL differences are not measured event counts, sentiment or performance; open-web coverage varies.",
+    "The model receives at most 10,000 prior report characters and 50 prior source URLs, with explicit truncation notices.",
+    "Email notification delivery, branded exports and user-timezone scheduling remain pending."
+  ]
+}

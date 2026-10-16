@@ -1,0 +1,35 @@
+{
+  "updated": "2026-10-16",
+  "theme": "Existing deployed theme preserved; controls use existing components and tokens.",
+  "chat": [
+    "Owned brand/project snapshot and user-defined hypothetical persona",
+    "Per-answer agent choice and retries preserving the original agent",
+    "Saved search, favorites, rename/delete confirmation and conversation pagination",
+    "Older messages beyond 100 turns with owner-scoped cursors",
+    "Copy answers with sources and paginated full Markdown export (2 MB export limit)",
+    "Idempotent create/send retries and existing billing quota protection"
+  ],
+  "workflows": [
+    "Five open-web presets plus custom one-to-three-step templates",
+    "Owned defaults: brand, project, text files, audience, competitors, research window and brief",
+    "Customize, duplicate, reorder, add/remove steps, save/edit and favorite",
+    "Snapshotted runs, prior report/source handoff, attempt history and guarded retries",
+    "Review mode and opt-in continuous progression while the run page is open",
+    "Combined Markdown export and idempotent rerun of saved configuration"
+  ],
+  "verification": {
+    "automated": "D1/R2 route integration, billing/auth regressions and React server rendering",
+    "browserInteraction": "Completed in signed-in Microsoft Edge using the Computer skill: cited real answer, follow-up memory and a complete three-step Brand Audit.",
+    "liveAI": "Live chat returned two official Amul citations and recalled the previous protein quantity; Brand Audit saved three completed reports with six, six and three sources.",
+    "background": "Implemented with verified OpenAI completion webhooks, durable D1 receipts, explicit opt-in, quotas and pause/stop controls; deployment and browser-closed acceptance are checked separately."
+  },
+  "remainingDependencies": [
+    "Licensed social/ad/panel providers",
+    "Shared team membership and permissions",
+    "Voice input"
+  ],
+  "sources": [
+    "https://www.waldo.fyi/strategize",
+    "User-provided logged-in Waldo chat/workflow screenshots"
+  ]
+}

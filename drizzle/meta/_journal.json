@@ -1,0 +1,97 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1791976155763,
+      "tag": "0000_gorgeous_champions",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1792041676984,
+      "tag": "0001_talented_roulette",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1792062675115,
+      "tag": "0002_oval_paladin",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1792064558199,
+      "tag": "0003_lively_robin_chapel",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1792064983095,
+      "tag": "0004_slow_guardian",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1792067480964,
+      "tag": "0005_busy_azazel",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1792069484129,
+      "tag": "0006_melodic_metal_master",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1792128710696,
+      "tag": "0007_next_rictor",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1792131177737,
+      "tag": "0008_lowly_johnny_blaze",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1792131407821,
+      "tag": "0009_nasty_viper",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1792133984991,
+      "tag": "0010_sparkling_ben_grimm",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1792135875963,
+      "tag": "0011_thick_namorita",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1792137750672,
+      "tag": "0012_colossal_barracuda",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,290 @@
+{
+  "reviewedOn": "2026-10-16",
+  "purpose": "Engineering acceptance map for functional equivalence; this file does not activate features or certify provider coverage.",
+  "constraints": {
+    "theme": "Preserve the current deployed SignalForge theme.",
+    "identity": "Keep SignalForge branding and independent implementation.",
+    "evidence": "Separate visible screenshot controls, official product claims, and verified SignalForge behavior.",
+    "providers": "Hosted integrations need authorized server-side provider access; a connector in this chat is not a hosted integration.",
+    "unknowns": "Waldo private workflow configuration, execution results, billing behavior, and team permissions have not been exercised live. This is not an exhaustive parity certification."
+  },
+  "referenceEvidence": {
+    "home": "https://www.waldo.fyi/",
+    "strategy": "https://www.waldo.fyi/strategize",
+    "pitch": "https://www.waldo.fyi/pitch",
+    "monitor": "https://www.waldo.fyi/monitor",
+    "build": "https://www.waldo.fyi/build",
+    "data": "https://www.waldo.fyi/data",
+    "searchScreenshot": "User screenshot 1: /search, brand cards, composer, agent/persona controls and quick actions.",
+    "chatsScreenshot": "User screenshot 2: conversation search, My chats, All chats, older chats.",
+    "navigationScreenshot": "User screenshot 3: Chats, Workflows, Projects, Files, Library.",
+    "workflowsScreenshot": "User screenshot 4: workflow catalog, filters, favorites and Create workflow.",
+    "projectsScreenshot": "User screenshot 5: empty projects with brand, schedule, visibility, owner and date filters.",
+    "libraryScreenshot": "User screenshot 6: report library filters and grid/list controls.",
+    "accountScreenshot": "User screenshot 7: workspace management, devices and product links."
+  },
+  "features": [
+    {
+      "id": "brand-context",
+      "service": "Strategize",
+      "reference": [
+        "searchScreenshot",
+        "navigationScreenshot"
+      ],
+      "status": "partial",
+      "current": "Saved brand/topic profiles populate research briefs; projects and reports can retain a brand association. Project research can populate saved brand context.",
+      "gap": "Persistent selected-brand context linking chats, projects, files, workflows and reports.",
+      "acceptance": [
+        "Switching brands scopes all related content consistently.",
+        "Reloading preserves the selection and unauthorized users cannot read another owner's records."
+      ],
+      "priority": 1
+    },
+    {
+      "id": "conversations",
+      "service": "Strategize",
+      "reference": [
+        "chatsScreenshot",
+        "strategy"
+      ],
+      "status": "partial",
+      "current": "Brand/project-scoped independent chat with immutable brand and hypothetical persona snapshots, per-answer Strategy/Research agent choice, supported context files, cited background answers and bounded recent-turn memory. Saved conversations support search, favorites, older-chat pagination, rename/delete confirmation, retry/cancel, older-message pagination beyond 100 turns, source-aware copying and full Markdown export. Creation and send retries preserve request identity.",
+      "gap": "Shared team My/All visibility, voice input and specialist social/ad datasets remain incomplete. Persona perspectives are simulated hypotheses, not representative research.",
+      "acceptance": [
+        "Create, reopen and search a brand-scoped conversation with saved context.",
+        "My/All views respect membership and visibility permissions, including paginated older conversations."
+      ],
+      "priority": 1
+    },
+    {
+      "id": "workflow-library",
+      "service": "Strategize",
+      "reference": [
+        "workflowsScreenshot"
+      ],
+      "status": "partial",
+      "current": "Nine catalog cards with filters/favorites, five runnable open-web presets and four explicitly unavailable provider-dependent presets. Editable templates retain owned brand/project/file defaults, briefs, audience, competitors and time windows; support customization, duplication and step reordering. Runs snapshot inputs/steps, preserve report attempts, hand prior findings/sources forward, export combined output and rerun the saved configuration. Review mode or continuous progression with signed-webhook background execution, including when the page is closed; errors and partial results pause. Idempotent creation and expected-step/report guards protect against delayed duplicate launches.",
+      "gap": "Specialist social/ad workflows require authorized provider connections. Richer reference workflow behavior has not been independently exercised.",
+      "acceptance": [
+        "A workflow accepts saved inputs, executes defined steps, persists progress and exposes retryable failures.",
+        "Users can create, save, reopen, search and favorite workflows; a template button alone does not satisfy execution."
+      ],
+      "priority": 1
+    },
+    {
+      "id": "projects",
+      "service": "Shared workspace",
+      "reference": [
+        "projectsScreenshot"
+      ],
+      "status": "partial",
+      "current": "Owner-scoped project create/edit/search/remove, optional brand association, linked reports and workflow runs. Removing a project retains reports and run history. Project/brand-associated context files are organized through the Files library; deleting a project detaches files without deleting them.",
+      "gap": "Team visibility/owners and scheduled project filters remain incomplete.",
+      "acceptance": [
+        "Create and reopen a project containing linked research and files.",
+        "Search and reference filters return matching records; visibility is enforced server-side."
+      ],
+      "priority": 1
+    },
+    {
+      "id": "files",
+      "service": "Shared workspace",
+      "reference": [
+        "navigationScreenshot",
+        "pitch"
+      ],
+      "status": "partial",
+      "current": "Organized Files library: PDF text (up to 50 pages), DOCX main-body text, UTF-8 TXT/CSV/Markdown. Files up to 5 MB and 100,000 extracted characters; previews, original downloads, project/brand association, rename, archive/restore. Up to three files share a 30,000-character context budget with explicit omissions and page/paragraph/line attribution. Owner checks and legacy text uploads are preserved.",
+      "gap": "PPTX, XLSX, image/chart interpretation and scanned-document OCR. DOCX headers, footnotes, comments and visual layout are not extracted.",
+      "acceptance": [
+        "Each supported format is parsed with traceable file/page references; unsupported or unreadable inputs show explicit errors.",
+        "Project/brand file selection preserves ownership and existing text uploads."
+      ],
+      "priority": 1
+    },
+    {
+      "id": "report-library",
+      "service": "Shared workspace",
+      "reference": [
+        "libraryScreenshot"
+      ],
+      "status": "partial",
+      "current": "Saved sourced reports with search, favorites, labels, project/brand/type/status/date filters, grid/list views, report organization, Markdown export, browser printing and revocable links.",
+      "gap": "Requester/team filters, author collaboration and pagination beyond the latest 100 reports remain incomplete.",
+      "acceptance": [
+        "Favorites and labels persist; combined filters produce correct accessible results.",
+        "Grid/list views open the same report and preserve filter state."
+      ],
+      "priority": 1
+    },
+    {
+      "id": "source-backed-research",
+      "service": "Strategize",
+      "reference": [
+        "strategy"
+      ],
+      "status": "partial",
+      "current": "Background OpenAI web research, citation extraction, saved reports and follow-up web research. Signed OpenAI webhooks persist terminal states without opening detail pages and advance eligible background workflows, with durable receipts and duplicate guards.",
+      "gap": "Specialist provider/agent routing and broader private reference behavior remain unverified.",
+      "acceptance": [
+        "A run reaches a persisted terminal state visible in the library without opening its detail.",
+        "Findings distinguish source facts, inference and limitations; failed runs remain actionable."
+      ],
+      "priority": 1
+    },
+    {
+      "id": "social-and-sentiment",
+      "service": "Strategize / Monitor",
+      "reference": [
+        "searchScreenshot",
+        "strategy",
+        "data"
+      ],
+      "status": "missing",
+      "current": "Public web research only; no dedicated social dataset or sentiment measurement pipeline.",
+      "gap": "Authorized social search, posts/comments, timestamps, coverage and auditable sentiment analysis.",
+      "dependencies": [
+        "Social data provider access and applicable usage rights."
+      ],
+      "acceptance": [
+        "Results include actual retrievable posts, platform and observation dates with coverage limits.",
+        "Sentiment metrics disclose the source sample, denominator, method and uncertainty; unsupported coverage returns an explicit unavailable state."
+      ],
+      "priority": 2
+    },
+    {
+      "id": "ads",
+      "service": "Strategize / Pitch",
+      "reference": [
+        "searchScreenshot",
+        "data"
+      ],
+      "status": "missing",
+      "current": "No connected ad-library provider or creative search.",
+      "gap": "Searchable competitor ads, creative evidence, advertiser and platform filtering.",
+      "dependencies": [
+        "Authorized ad-library or licensed provider access."
+      ],
+      "acceptance": [
+        "Search returns verifiable ad identifiers, creatives, advertisers, source links and observation dates.",
+        "Ad volume is not labeled as spend, conversions or performance; unavailable metrics remain unavailable."
+      ],
+      "priority": 2
+    },
+    {
+      "id": "trends-audience-personas",
+      "service": "Strategize",
+      "reference": [
+        "searchScreenshot",
+        "strategy",
+        "data"
+      ],
+      "status": "partial",
+      "current": "Audience and trends templates synthesize open-web evidence. Persona snapshots offer explicitly labeled hypothetical perspectives.",
+      "gap": "Measured trend signals and licensed representative audience panels.",
+      "dependencies": [
+        "Trend data access; separate audience dataset license if representative measurement is offered."
+      ],
+      "acceptance": [
+        "Trend claims include observed period, geography and the actual underlying metric.",
+        "Panel outputs expose methodology and source; simulated persona responses are clearly separated from measured audience evidence."
+      ],
+      "priority": 2
+    },
+    {
+      "id": "pitch",
+      "service": "Pitch",
+      "reference": [
+        "pitch"
+      ],
+      "status": "partial",
+      "current": "Dedicated Pitch workspace saves structured RFP/client intake and agency credential snapshots, references owned context files, creates an editable manual playbook, launches cited research through the existing one-step background workflow engine, explicitly imports completed research, retains append-only playbook/source revisions with conflict checks and restore, and exports saved Markdown. Intake records, agency profiles and pitches support private ownership; agency profiles and pitches can be archived/restored. Each research run consumes the existing report allowance.",
+      "gap": "Team review/approval, structured stakeholder collaboration and rich presentation/DOCX exports. External ad/social/panel evidence still requires provider access. Human edits need source verification; revision restore covers playbook/source links, not historical intake or agency snapshots.",
+      "acceptance": [
+        "A real brief plus agency credentials produces traceable requirements, uncertainties, distinct angles and sourced proof points.",
+        "Users can revise and retain a playbook, follow up, and export/share it without losing evidence."
+      ],
+      "priority": 2
+    },
+    {
+      "id": "monitoring",
+      "service": "Monitor",
+      "reference": [
+        "monitor",
+        "projectsScreenshot"
+      ],
+      "status": "partial",
+      "current": "Active hourly Google Cloud Scheduler in local-snow-508108-g3 calls the authenticated OIDC monitoring dispatcher. Daily/weekly/monthly rules, duplicate guards, retries and saved report history exist. A real Google-triggered QA report completed with four citations and one report after duplicate dispatch. QA rules are paused; all saved brands are configured for weekly India briefings, with no real business brands yet saved. Owner-scoped scan history paginates beyond 100 reports. New scans snapshot the earlier completed same-rule report at launch; comparable scopes receive a cited changes section within the existing provider call. Report detail compares normalized source URLs, links the earlier briefing and exports the comparison with the current report and citations. First/legacy/unfinished/changed-scope states are explicit; private baseline metadata is omitted from shared reports.",
+      "gap": "Opt-in notification delivery, branded exports, user-timezone scheduling and specialist dataset coverage. Legacy reports are not retroactively assigned a baseline.",
+      "dependencies": [
+        "Verified scheduler, monitored execution, delivery mechanism and appropriate connected datasets."
+      ],
+      "acceptance": [
+        "Daily/weekly/monthly runs execute without an open browser, with retry and duplicate prevention.",
+        "Month-end and timezone behavior is defined and tested; delivered alerts point to saved reports with comparable periods and explicit data limits."
+      ],
+      "knownIssues": [
+        "General saved timezone preference is not applied to rule scheduling; the deployed dispatcher uses Asia/Calcutta and cadence instants are UTC-based. Monthly month-end clamping is tested."
+      ],
+      "priority": 2
+    },
+    {
+      "id": "developer-data-platform",
+      "service": "Build",
+      "reference": [
+        "build"
+      ],
+      "status": "partial",
+      "current": "Read-only owner-scoped API keys and MCP list_reports, get_report, list_profiles.",
+      "gap": "Provider-backed data discovery, raw/aggregate/analysis endpoints, metering and richer scoped access. Existing report access is not equivalent to Waldo/Adveron's data platform.",
+      "dependencies": [
+        "Licensed data access, endpoint contracts, quotas and provider cost controls."
+      ],
+      "acceptance": [
+        "Documented API/MCP requests return real connected data with provenance and bounded costs.",
+        "Key scopes, revocation, tenant isolation, rate limits and usage accounting are verified."
+      ],
+      "priority": 3
+    },
+    {
+      "id": "teams-and-commerce",
+      "service": "Shared workspace",
+      "reference": [
+        "accountScreenshot",
+        "chatsScreenshot"
+      ],
+      "status": "partial",
+      "current": "Google/email-password authentication, owner-isolated records and account/usage controls. Approved INR/USD Solo and Pro plans have Razorpay checkout, verification, webhooks, cancellation and usage code, but test/live payment configuration is deliberately disabled because keys were deferred. No team membership model.",
+      "gap": "Multiple workspaces, invitations/roles and shared content permissions; merchant acceptance testing and activation after test/live configuration. Gmail sender OAuth remains in Testing.",
+      "dependencies": [
+        "Confirmed SignalForge commercial terms, payment provider and transactional delivery."
+      ],
+      "acceptance": [
+        "Invited members receive only their permitted workspace access; removing access invalidates subsequent reads and writes.",
+        "If payments are enabled, verified payment events update entitlements idempotently and cancellation/refund behavior follows the agreed terms."
+      ],
+      "priority": 3
+    }
+  ],
+  "deliveryOrder": [
+    "Brand context, conversations, projects, workflows, files and report organization using the current theme.",
+    "Real provider-backed social, ads, trends and audience capabilities with observable failures and coverage disclosures.",
+    "Complete Pitch intake/playbooks and activate reliable monitoring with historical comparison and delivery.",
+    "Expand developer APIs, teams and commercial operations once access and terms are established."
+  ],
+  "verification": {
+    "releaseScope": "Monitoring scan history, launch-time baseline snapshots and cited comparisons using the frozen theme; full Waldo parity remains incomplete.",
+    "evidence": [
+      "Real saved chat with contextual follow-up and a three-step background workflow were verified in the preceding releases.",
+      "Google Cloud Scheduler executed a real monitoring scan with cited saved output; duplicate dispatch produced one report.",
+      "Worker API tests exercise actual PDF/DOCX parsers, exact original downloads, file context in provider requests, invalid/scanned inputs, archive/restore and cross-owner isolation.",
+      "Worker integration tests verify pitch snapshots, concurrent revision conflicts, restore, owner isolation, duplicate launch suppression, real file context in requests, explicit imports and quota enforcement.",
+      "98 fixture/policy tests pass, including monitor ownership, baseline selection, scope changes, duplicate dispatch, pagination and shared-report isolation. Two real isolated provider scans completed with six and four cited sources; the second retained the first baseline and generated a comparison section."
+    ],
+    "limits": [
+      "Provider-dependent social/ad/audience datasets are not connected.",
+      "Waldo private workflow execution and team permission behavior are not an exhaustive tested specification.",
+      "Build/test and live Files publication evidence are recorded separately in the release acceptance record."
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "reviewedOn": "2026-10-15",
+  "connected": false,
+  "accountsCreatedOrPurchased": false,
+  "recommendation": "Test SearchApi for ads/trends first, then a bounded Apify social pilot. Obtain separate audience-panel product/API access before offering representative audience measurements.",
+  "providers": [
+    {
+      "name": "SearchApi",
+      "purpose": "Meta and Google ad-library data; Google search-interest trends.",
+      "publishedPricing": "100 free requests advertised; Developer plan lists USD 40/month for 10,000 searches. Pagination and detail requests must be included in the usage budget.",
+      "sources": ["https://www.searchapi.io/pricing", "https://www.searchapi.io/meta-ad-library-api", "https://www.searchapi.io/google-ads-transparency-center-api", "https://www.searchapi.io/google-trends", "https://www.searchapi.io/legal/terms"],
+      "nextSteps": ["The owner creates the account; SearchApi terms require a human registrant.", "Verify coverage against known Indian advertisers and retain original attribution and source links.", "Confirm commercial embedding/redistribution rights for the intended public product before rollout; an API subscription is not a blanket content license.", "Store any key only as a server-side secret; add bounded queries, rate limits, usage accounting and explicit unavailable states."],
+      "limitations": "Provider retrieval has not been tested. Ad-library records are not proof of spend, conversions or campaign effectiveness. Available transparency fields vary."
+    },
+    {
+      "name": "Apify",
+      "purpose": "Trial public social posts, profiles and comments using selected Actors.",
+      "publishedPricing": "Free plan advertises USD 5/month usage credit. Starter lists USD 19/month plus pay-as-you-go. Each Actor has its own result/event/usage pricing; no all-network flat-price assumption.",
+      "sources": ["https://apify.com/pricing", "https://docs.apify.com/api/v2", "https://apify.com/apify/instagram-scraper", "https://apify.com/clockworks/tiktok-scraper"],
+      "nextSteps": ["Select specific Actors and validate bounded samples, output fields, dates and source URLs.", "Check usage rights, geographic/language coverage, costs and reliability before enabling public queries.", "Build sentiment only over collected evidence, with a disclosed sample size and method."],
+      "limitations": "A social collection sample is neither exhaustive listening nor a representative audience panel. No Actor was run in this review."
+    },
+    {
+      "name": "GWI",
+      "purpose": "Licensed consumer/audience survey insights.",
+      "publishedPricing": "The pricing page distinguishes ordinary user plans from enterprise product/API integration. Product-embedding API terms and price need a direct quote; do not assume a free or Plus seat grants redistribution rights.",
+      "sources": ["https://www.gwi.com/pricing"],
+      "nextSteps": ["Confirm API availability, India coverage, methodology, allowed product use and commercial terms directly with GWI."],
+      "limitations": "No panel API or license is connected. Open-web summaries must remain labeled separately from panel measurements."
+    }
+  ]
+}

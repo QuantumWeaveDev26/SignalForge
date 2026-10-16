@@ -1,0 +1,20 @@
+{
+  "method": "Signed OpenAI response completion webhooks; no browser or laptop process is required after launch.",
+  "endpoint": "/api/webhooks/openai",
+  "configuration": ["OPENAI_WEBHOOK_SECRET (server secret)", "BACKGROUND_WEBHOOK_ENABLED=true"],
+  "behavior": [
+    "Review mode remains the default. Users explicitly choose background mode or enable it on an unfinished run.",
+    "Existing runs receive background_enabled=0 through an additive migration.",
+    "Raw-body HMAC verification includes delivery ID and timestamp with a five-minute tolerance.",
+    "D1 delivery receipts and workflow leases protect against duplicate steps and concurrent callbacks.",
+    "Only response IDs saved by SignalForge or its matching launch metadata can update an owned record.",
+    "Later steps receive prior findings and source links through the existing engine and quota checks.",
+    "Errors, partial results and allowance failures pause progression and require explicit review and retry.",
+    "Stopping a run prevents future steps; cancelling its current provider response is a separate action.",
+    "Chat and standalone report completions also synchronize while their pages are closed."
+  ],
+  "recovery": "Non-successful webhook processing returns a retryable response. OpenAI retries failed deliveries for up to 72 hours. Manual workflow controls remain available if external delivery is unavailable.",
+  "rollback": "Set BACKGROUND_WEBHOOK_ENABLED=false and deploy the saved version. Keep additive data and the webhook secret for completion synchronization. Background mode will not launch subsequent steps.",
+  "monitoring": "This does not activate recurring monitoring. The existing paused monitoring automation is preserved; the public monitoring writer requires its own MONITOR_RUNNER_SECRET.",
+  "sources": ["https://developers.openai.com/api/docs/guides/webhooks", "https://developers.openai.com/api/reference/resources/webhooks/methods/create"]
+}

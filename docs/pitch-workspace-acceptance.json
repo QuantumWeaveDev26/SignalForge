@@ -1,0 +1,37 @@
+{
+  "verifiedOn": "2026-10-16",
+  "scope": "Saved pitch intake, reusable agency snapshots, editable/recoverable playbooks and cited research using the existing theme.",
+  "checks": {
+    "regressionTests": 92,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "realAI": {
+      "environment": "Isolated D1/R2 Worker test; actual OpenAI provider",
+      "status": "passed",
+      "sourceCount": 7,
+      "characters": 8867,
+      "workflowStatus": "completed",
+      "importEditRestoreRevision": 4
+    },
+    "liveBrowser": [
+      "Agency profile created and reused in a saved brief",
+      "PDF selected and agency snapshot retained",
+      "Manual playbook edit saved as revision 2; unsaved-change guard disabled generation/export",
+      "Original playbook restored as revision 3, preserving revision 2",
+      "Downloaded Markdown contains intake, agency snapshot, budget, revision and provenance notice",
+      "Production launch paused at the existing daily report allowance without consuming another report",
+      "Pitch archive/restore exercised"
+    ]
+  },
+  "productionQA": {
+    "pitchId": "a395cf9d-ee5a-4dbd-b96c-3d07b0819de8",
+    "researchRunId": "9089a7b8-cd96-4558-8aa4-6038d98c2ed6",
+    "data": "Explicitly fictional QA brief and credentials. Not customer adoption evidence."
+  },
+  "limits": [
+    "Real AI completion/import exercised in isolated Worker database; production account was already at its report allowance.",
+    "Playbook revision restore restores text and source links, not historical intake/agency snapshots.",
+    "Human edits are not automatically source-verified.",
+    "Rich presentation/DOCX exports, team approvals and specialist data integrations remain pending."
+  ]
+}

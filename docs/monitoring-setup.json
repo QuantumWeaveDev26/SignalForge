@@ -1,0 +1,56 @@
+{
+  "site": "https://signalforge-research-nr.brandmintai.chatgpt.site",
+  "googleProject": "local-snow-508108-g3",
+  "requestedScope": "All current and future saved brands/topics, weekly India briefings; individual pause is preserved by routine synchronization.",
+  "writer": {
+    "method": "POST",
+    "path": "/api/monitor-tick",
+    "body": {},
+    "authentication": "Google-signed RS256 OIDC token with the configured service-account email and exact audience. Sites service access and the old private-deployment flag grant no writer access.",
+    "requiredEnvironment": [
+      "MONITOR_GOOGLE_SERVICE_ACCOUNT",
+      "MONITOR_GOOGLE_AUDIENCE"
+    ],
+    "audience": "https://signalforge-research-nr.brandmintai.chatgpt.site/api/monitor-tick",
+    "serviceAccount": "signalforge-monitor-runner@local-snow-508108-g3.iam.gserviceaccount.com"
+  },
+  "scheduler": {
+    "provider": "Google Cloud Scheduler",
+    "region": "asia-south1",
+    "frequency": "0 * * * *",
+    "timezone": "Asia/Calcutta",
+    "purpose": "Hourly due-rule dispatcher; each brand rule still runs weekly. Existing paused Sites automation must remain paused to avoid redundant dispatchers.",
+    "activation": "Keep MONITOR_SCHEDULER_ACTIVE false until the actual cloud job is created, enabled, executed and its authenticated HTTP result verified. Do not treat this file as evidence of activation.",
+    "jobName": "signalforge-monitor-runner",
+    "serviceAccountName": "signalforge-monitor-runner",
+    "retry": {
+      "maxAttempts": 3,
+      "maxDurationSeconds": 3600,
+      "minBackoffSeconds": 60,
+      "maxBackoffSeconds": 3600,
+      "attemptDeadlineSeconds": 180
+    },
+    "state": "enabled"
+  },
+  "execution": {
+    "storage": "D1 reports, monitors and preferences",
+    "costs": "Every launched scan consumes the existing report allowance and provider usage. Quotas are enforced for unattended work.",
+    "retries": "A unique owner/monitor/due reservation prevents repeated paid launches after lost acknowledgements or expired leases. An unknown provider launch outcome is retained as a failed/interrupted report rather than relaunched automatically. Quota/pre-reservation failures back off one hour.",
+    "cadence": "First scan due immediately. Preserve the UTC cadence anchor, skip missed periods, clamp short months and restore the original month-day later. Runner interval can delay starts by up to one hour plus retries.",
+    "completion": "Existing signed OpenAI background webhooks persist completed reports. The scheduler also refreshes pending reports as a fallback; refresh failures return HTTP 503 for retry.",
+    "notifications": "Results and errors appear in the workspace. Monitoring does not send email or access connected social/ad/panel providers."
+  },
+  "validation": {
+    "automatedChecks": 83,
+    "realProvider": "One completed report with two official Google documentation sources in an isolated local D1 database; duplicate and pause behavior checked without modifying production owners or quotas.",
+    "cloudStatusAtImplementation": "Verified: an authenticated Google Cloud Scheduler force-run launched a due monitoring rule, the signed OpenAI webhook saved its completed cited report, and the rule advanced one week. QA rule paused after the test. MONITOR_SCHEDULER_ACTIVE enabled only after this proof.",
+    "cloudReportId": "91aee485-651f-4194-a9f1-1fbe82a79829",
+    "cloudReportCompletedAt": "2026-10-16T06:41:26.150Z",
+    "cloudReportCitationLinks": 4,
+    "cloudWebhookReceipt": "wh_6ad1c7139de081909e9cf8c84cd985f1",
+    "qaRulePausedAfterTest": true,
+    "nextDueAfterTest": "2026-10-23T06:40:48.355Z"
+  },
+  "rollback": "Pause the Google Cloud job first, disable all-brand monitoring in the workspace, and leave the old Sites task paused. Source can revert while retaining additive nullable/defaulted schema columns; do not remove user reports.",
+  "googleAccount": "ceo@brandmintai.io"
+}

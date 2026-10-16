@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const base='http://127.0.0.1:5173';
+const results=[];
+async function call(path,method='GET',body,extra={}){const r=await fetch(base+path,{method,headers:{'Content-Type':'application/json',Origin:base,...extra},...(body?{body:JSON.stringify(body)}:{}),signal:AbortSignal.timeout(30000)});const text=await r.text();let value;try{value=JSON.parse(text);}catch{value={error:text.slice(0,100)};}return{status:r.status,value};}
+let v=await call('/api/workspace');assert.equal(v.status,401);results.push('anonymous workspace rejected');
+const signIn=await fetch(base+'/signin-with-chatgpt?return_to=/workspace',{redirect:'manual'});
+const cookie=signIn.headers.get('set-cookie')?.split(';')[0];assert.ok(cookie,'local mock sign-in must issue its dev cookie');
+const headers={Cookie:cookie};
+v=await call('/api/workspace','GET',null,headers);assert.equal(v.status,200);assert.equal(typeof v.value.providerReady,'boolean');results.push('signed-in workspace loaded');
+v=await call('/api/workspace/profiles','POST',{name:'Smoke test brand',market:'India'},headers);assert.equal(v.status,201);const profileId=v.value.id;results.push('profile persisted');
+v=await call('/api/workspace/profiles/'+profileId,'GET',null,{'oai-authenticated-user-id':'test_other_user','oai-authenticated-user-email':'other@sites.test'});assert.equal(v.status,401);results.push('spoofed identity headers cannot access profiles');
+v=await call('/api/workspace/profiles','POST',{name:'CSRF attempt'},{...headers,Origin:'https://other.example'});assert.equal(v.status,403);results.push('cross-origin mutation rejected');
+v=await call('/api/workspace/reports','POST',{template:'unknown'},headers);assert.equal(v.status,400);results.push('invalid research rejected');
+v=await call('/api/workspace/keys','POST',{name:'Temporary smoke-test key'},headers);assert.equal(v.status,201);const token=v.value.token,keyId=v.value.id;
+v=await call('/api/workspace/profiles','GET',null,{Authorization:'Bearer '+token});assert.equal(v.status,200);results.push('scoped key reads profiles');
+v=await call('/api/workspace/reports','POST',{template:'brand',subject:'X',question:'Question'},{Authorization:'Bearer '+token});assert.equal(v.status,403);results.push('read-only key cannot launch billed research');
+v=await call('/api/mcp','POST',{jsonrpc:'2.0',id:1,method:'tools/list'},{Authorization:'Bearer '+token});assert.equal(v.status,200);assert.equal(v.value.result.tools.length,3);results.push('MCP tools available');
+await call('/api/workspace/keys/'+keyId,'DELETE',null,headers);v=await call('/api/workspace/profiles','GET',null,{Authorization:'Bearer '+token});assert.equal(v.status,401);results.push('revoked key rejected');
+await call('/api/workspace/profiles/'+profileId,'DELETE',null,headers);
+v=await call('/api/monitor-tick','POST',{});assert.equal(v.status,401);results.push('monitor runner requires service authorization');
+fs.mkdirSync('outputs',{recursive:true});fs.writeFileSync('outputs/api-smoke.json',JSON.stringify({passed:results.length,results},null,2));console.log(JSON.stringify({passed:results.length,results},null,2));

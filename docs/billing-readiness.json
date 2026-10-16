@@ -1,0 +1,45 @@
+{
+  "updated": "2026-10-15",
+  "provider": "Razorpay Subscriptions",
+  "pricesApprovedByOperator": true,
+  "plans": {
+    "solo": {"INR": 1499, "USD": 19, "chatQuestions": 50, "reportRuns": 10},
+    "pro": {"INR": 3999, "USD": 49, "chatQuestions": 200, "reportRuns": 30}
+  },
+  "interval": "monthly",
+  "cycles": 120,
+  "currentActivation": "Disabled until server-side configuration and merchant test checkout are completed.",
+  "implementation": [
+    "Server-authoritative prices and Razorpay plan validation",
+    "Authenticated and same-origin checkout, verification, refresh and cancellation",
+    "Raw-body HMAC webhook verification and event deduplication",
+    "Provider readback of subscription, invoice and captured payment",
+    "Paid period ledger isolated by test/live mode, revocation for refunds and disputes",
+    "Atomic per-account usage shared across linked workspaces and retained after conversation deletion",
+    "Shared chat and report-followup quota; each workflow step consumes one report run",
+    "No rollover or automatic overage charges; saved reports remain readable after expiry"
+  ],
+  "activationSteps": [
+    "Save TEST keys in ignored .env.billing.local; do not paste secrets into chat.",
+    "Run node scripts/setup-razorpay.mjs to create or validate the four approved TEST plans and prepare a webhook secret.",
+    "In Razorpay TEST mode, create a webhook at the endpoint below using the secret from the ignored file; subscribe to the listed events.",
+    "Install settings as server-side Sites secrets using native environment tools. Do not put them in .openai/hosting.json or client source.",
+    "Publish test mode, complete merchant test checkout in both currencies, verify webhook delivery and cancellation. No real cards or money are needed.",
+    "Before live activation, configure separate LIVE keys, LIVE plan IDs and LIVE webhook secret; confirm commercial terms/tax treatment and support details with the operator.",
+    "Enable BILLING_MODE=live only after test acceptance. International payments and Subscriptions were reported enabled by the operator, not independently inspected."
+  ],
+  "webhookEndpoint": "https://signalforge-research-nr.brandmintai.chatgpt.site/api/billing/webhook",
+  "webhookEvents": ["subscription.authenticated", "subscription.activated", "subscription.charged", "subscription.pending", "subscription.halted", "subscription.cancelled", "subscription.completed", "subscription.paused", "subscription.resumed", "refund.processed", "payment.dispute.created"],
+  "policies": {
+    "counting": "Started, stopped, partial and retried runs count. Duplicate chat request IDs do not count again.",
+    "cancellation": "Cancel future renewal; retain independently verified paid period until expiry.",
+    "refunds": "Operator reviews requests; a refunded or disputed period is suspended for review.",
+    "planChanges": "First release requires cancellation and paid-period expiry before subscribing to another plan/currency.",
+    "evaluationDuringSetup": "Existing daily evaluation limits remain while billing mode is disabled or test.",
+    "evaluationAfterLiveActivation": "Three report runs and ten chat questions total; expired paid accounts do not reset to evaluation.",
+    "unknownCheckoutResult": "A timeout or uncertain create response leaves an account lock. Reconcile provider subscriptions against signalforge_account notes before releasing it; never blindly retry a POST."
+  },
+  "rollback": "Set BILLING_MODE=disabled and redeploy to pause new checkout and return to evaluation behavior. This does not cancel existing provider mandates: cancel those in Razorpay if required. Preserve all five billing tables and historical usage. Applied migrations are immutable.",
+  "limitations": ["No automatic plan upgrades or prorations", "No automated refunds or tax-invoice implementation", "No licensed data subscriptions", "No independent live merchant checkout test yet"],
+  "sources": ["https://razorpay.com/docs/payments/subscriptions/integration-guide/", "https://razorpay.com/docs/api/payments/subscriptions/create-plan/", "https://razorpay.com/docs/api/payments/subscriptions/create-subscription/", "https://razorpay.com/docs/api/payments/subscriptions/fetch-invoices", "https://razorpay.com/docs/api/payments/subscriptions/cancel-subscription/", "https://razorpay.com/docs/webhooks/validate-test/", "https://developers.openai.com/api/docs/models/gpt-5.4-mini", "https://developers.openai.com/api/docs/pricing"]
+}

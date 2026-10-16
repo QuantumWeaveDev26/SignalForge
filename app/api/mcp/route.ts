@@ -1,0 +1,11 @@
+import { identity, all, owned, publicReport } from '@/lib/server';
+import { AppError } from '@/lib/research';
+export const dynamic='force-dynamic';
+const tools=[{name:'list_reports',description:'List the caller workspace reports. Read-only.',inputSchema:{type:'object',properties:{},additionalProperties:false}},{name:'get_report',description:'Read one caller-owned report and its sources. Read-only.',inputSchema:{type:'object',properties:{id:{type:'string'}},required:['id'],additionalProperties:false}},{name:'list_profiles',description:'Read the caller workspace brand/topic profiles.',inputSchema:{type:'object',properties:{},additionalProperties:false}}];
+export async function POST(req:Request){let rpc:any;try{if(!req.headers.get('authorization')?.startsWith('Bearer '))throw new AppError('Use a workspace API key.',401);const user=await identity(req);const text=await req.text();if(text.length>5000)throw new AppError('Request too large.',413);rpc=JSON.parse(text);let result:any;
+  if(rpc.method==='notifications/initialized')return new Response(null,{status:202});
+  if(rpc.method==='initialize')result={protocolVersion:'2025-03-26',capabilities:{tools:{}},serverInfo:{name:'SignalForge',version:'1.0.0'}};
+  else if(rpc.method==='ping')result={};else if(rpc.method==='tools/list')result={tools};
+  else if(rpc.method==='tools/call'){const name=rpc.params?.name;let value;if(name==='list_reports')value=(await all('SELECT * FROM reports WHERE owner=? ORDER BY created DESC LIMIT 50',user.owner)).map(r=>publicReport(r));else if(name==='get_report')value=publicReport(await owned('reports',String(rpc.params?.arguments?.id||''),user.owner));else if(name==='list_profiles')value=await all('SELECT * FROM profiles WHERE owner=?',user.owner);else throw new AppError('Unknown tool.');result={content:[{type:'text',text:JSON.stringify(value)}]};}
+  else return Response.json({jsonrpc:'2.0',id:rpc.id,error:{code:-32601,message:'Method not found'}});return Response.json({jsonrpc:'2.0',id:rpc.id,result});
+}catch(e){return Response.json({jsonrpc:'2.0',id:rpc?.id??null,error:{code:-32000,message:e instanceof AppError?e.message:'Invalid request.'}},{status:e instanceof AppError?e.status:400});}}

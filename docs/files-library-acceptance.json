@@ -1,0 +1,52 @@
+{
+  "reviewedOn": "2026-10-16",
+  "scope": "Reusable Files library and source-attributed PDF/DOCX context; existing theme preserved.",
+  "checks": {
+    "regressionTests": {
+      "passed": 85,
+      "failed": 0
+    },
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "workerIntegration": [
+      "Actual PDF/DOCX extraction preserves page/paragraph references and Unicode",
+      "Original download bytes match the upload; response prevents content sniffing",
+      "Owner isolation, rejected invalid/scanned files, project association and parent removal",
+      "Archive/restore and selected-file context reach the provider request"
+    ],
+    "liveBrowser": [
+      "Published Files navigation and existing legacy uploads visible",
+      "Search and active/archive filters checked",
+      "PDF page text and DOCX paragraph text verified on the published site",
+      "Chat 62738356-fb2d-4e58-9afc-c0e8a4146b27 returned Project Amber and INR 240000 from the selected PDF with filename/page attribution"
+    ],
+    "liveUploadStatus": "Passed: real PDF and DOCX uploads/extracted previews, Hindi Unicode, original PDF download, archive/restore, and a real OpenAI chat answer citing the PDF filename and Page 1.",
+    "downloadBytesMatch": true
+  },
+  "limits": {
+    "uploadBytes": 5000000,
+    "extractedCharacters": 100000,
+    "pdfPages": 50,
+    "selectedFiles": 3,
+    "combinedContextCharacters": 30000,
+    "activeFiles": 20,
+    "storedFiles": 100
+  },
+  "unsupported": [
+    "Scanned-document OCR",
+    "Image/chart interpretation",
+    "PowerPoint",
+    "XLSX",
+    "DOCX headers/footnotes/comments/layout"
+  ],
+  "pendingWaldoAreas": [
+    "Provider-backed ads, social listening, measured trends and audience panels",
+    "Teams, roles, invitations and shared multiworkspace content",
+    "Dedicated pitch/RFP intake, credentials and editable playbooks",
+    "Monitoring comparisons/change digests and opt-in delivery",
+    "Rich export formats and larger report pagination",
+    "Expanded raw/aggregate developer data APIs",
+    "Voice input",
+    "Razorpay merchant acceptance testing and activation after keys are provided"
+  ]
+}

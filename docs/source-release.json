@@ -1,0 +1,36 @@
+{
+  "site_url": "https://signalforge-research-nr.brandmintai.chatgpt.site",
+  "sites_project_id": "appgprj_6acf5cb489c08191a409ea6fa27858a1",
+  "sites_source_commit": "3d046a6c5ce06ae900340b3384a25a6ce9814668",
+  "source_export": "git archive of tracked files at the exact published Sites commit",
+  "synchronized_date": "2026-10-16",
+  "published_version": 17,
+  "excluded_tracked_files": [
+    "tsconfig.tsbuildinfo"
+  ],
+  "maintenance_only_differences": {
+    "modified": [
+      "README.md",
+      ".gitignore"
+    ],
+    "added": [
+      ".github/workflows/ci.yml",
+      "docs/repository-maintenance.md",
+      "docs/source-release.json"
+    ]
+  },
+  "verification": {
+    "fixture_policy_tests": 98,
+    "typecheck": "passed",
+    "production_build": "passed",
+    "live_ai_monitoring_comparison": "two isolated scans passed; 6 and 4 sources; baseline matched; duplicate dispatch produced no extra report",
+    "live_site_browser_qa": "passed on version17: monitoring history navigation/refresh, briefing, legacy no-baseline state, return-to-history, Markdown download with sources/limits, no console errors",
+    "github_clean_checkout": {
+      "npm_ci": "passed",
+      "typecheck": "passed",
+      "fixture_policy_tests": 98,
+      "production_build": "passed",
+      "production_credentials_used": false
+    }
+  }
+}

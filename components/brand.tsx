@@ -1,0 +1,2 @@
+export function Mark(){return <svg className="mark" width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M5 3v26M5 16h5" stroke="currentColor" strokeWidth="2"/><path d="M14 9v14M26 12v8" stroke="currentColor" strokeWidth="2"/><path d="M20 4v24" stroke="var(--l589)" strokeWidth="2"/></svg>;}
+export function Brand({workspace=false}:{workspace?:boolean}){return <a className="brand" href={workspace?'/workspace':'/'} aria-label="SignalForge home"><Mark/><span>signalforge</span></a>;}
