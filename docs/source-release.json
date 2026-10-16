@@ -11,13 +11,15 @@
   "maintenance_only_differences": {
     "modified": [
       "README.md",
-      ".gitignore"
+      ".gitignore",
+      "package-lock.json"
     ],
     "added": [
       ".github/workflows/ci.yml",
       "docs/repository-maintenance.md",
       "docs/source-release.json"
-    ]
+    ],
+    "lockfile_repair": "Added only missing optional @emnapi/core@1.10.0 and @emnapi/runtime@1.10.0 entries beneath @rolldown/binding-wasm32-wasi for Linux npm ci validation; no existing package versions changed."
   },
   "verification": {
     "fixture_policy_tests": 98,
