@@ -16,6 +16,7 @@ SignalForge is a business research and strategy workspace with an original visua
 - Daily/weekly/monthly monitoring rules, report history and an authenticated hourly Google Cloud dispatcher that respects each rule's own cadence. Repeat briefings can be compared with the prior completed scan, with source differences, an AI change summary and duplicate-dispatch protection.
 - Scoped, hashed and revocable read-only workspace API keys and JSON-RPC MCP tools for saved reports and profiles.
 - Usage/concurrency limits, source-coverage disclosures and disabled states for services that have not been connected.
+- An authenticated, repeat-safe action saves the fixed prepared manager demo report/playbook into the account's workspace with related project/brand records and a paused monitoring rule. Samples are clearly fictional and prepared, not live AI research; saving them makes no provider or payment call.
 
 Word exports include linked source appendices and disclose status/coverage limits; native Office visual pagination has not been verified. The acceptance records in docs/ describe tested behavior and remaining limits. docs/source-release.json identifies the exact published Sites source commit mirrored into this repository. See docs/repository-maintenance.md for future release synchronization.
 

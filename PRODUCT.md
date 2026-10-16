@@ -67,3 +67,7 @@ The target is a brand and market intelligence platform covering Waldo's four ser
 Saved completed/partial research reports and saved pitch playbooks download as editable DOCX without a provider call. Reports include the question, status, market, creation date, body, numbered citation links, source appendix and limitations. Pitch playbooks include the saved revision, intake, supplied agency snapshot, body, file identifiers and source trail. Pitch exports are disabled while the editor has unsaved changes. Existing Markdown and Print/PDF exports remain available.
 
 The export supports the product Markdown subset, headings, emphasis, bullet/numbered lists, links, code, and simple pipe tables. Wide tables become labeled records to preserve legibility. Images are preserved as text references, not embedded. It is a saved-content document, not a slide deck; report follow-up chat and the separate monitoring comparison panel are not included. No shared links or access grants are created.
+
+## Prepared manager demo
+
+Overview can save a fixed fictional coffee launch pack for the signed-in owner. The brand/project, sourced prepared report, editable pitch and initial revision, and paused weekly monitoring rule are saved atomically. Prepared content states its origin and source review date; it is not presented as a new model run. Repeated saves reuse the same records without overwriting edits. No provider calls, new billing charges or public share links are created. Real research and follow-ups retain their normal usage limits.

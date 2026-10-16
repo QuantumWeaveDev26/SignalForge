@@ -12,6 +12,7 @@ import {listAgencies,saveAgency,listPitches,pitchState,createPitch,updatePitch,s
 import {monitorHistory} from '@/lib/monitor-history';
 import {reportLibrary} from '@/lib/report-library';
 import {saveProfile,brandWorkspace} from '@/lib/brand-workspace';
+import {saveManagerDemo} from '@/lib/manager-demo';
 export const dynamic='force-dynamic';
 function json(data:unknown,status=200){return Response.json(data,{status,headers:{'Cache-Control':'no-store'}});}
 async function body(req:Request,limit=60000){if(Number(req.headers.get('content-length')||0)>limit)throw new AppError('Request is too large.',413);const text=await req.text();if(text.length>limit)throw new AppError('Request is too large.',413);try{const value=JSON.parse(text);if(!value||typeof value!=='object'||Array.isArray(value))throw new Error();return value;}catch{throw new AppError('Invalid request body.');}}
@@ -20,6 +21,7 @@ async function handle(req:Request){
     const method=req.method;const mutation=method!=='GET';const who=await identity(req,mutation);const owner=who.owner;
     const parts=new URL(req.url).pathname.replace(/^\/api\/workspace\/?/,'').split('/').filter(Boolean);const [area,record,action]=parts;
     if(who.api&&!['reports','profiles'].includes(area))throw new AppError('This API key can only read reports and profiles.',403);
+    if(area==='demo-pack'&&method==='POST'&&!record){const value=await body(req,256);if(value.pack!=='coffee-launch-v1'||Object.keys(value).some(k=>k!=='pack'))throw new AppError('Choose the prepared coffee launch demo.');return json(await saveManagerDemo(owner));}
     if(area==='report-library'&&method==='GET'&&!record)return json(await reportLibrary(owner,new URL(req.url).searchParams));
     if(!area&&method==='GET'){
       const reports=await all('SELECT * FROM reports WHERE owner=? ORDER BY created DESC LIMIT 100',owner);

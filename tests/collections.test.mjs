@@ -677,3 +677,51 @@ test('Additive profile revision migration preserves old rows and old create/read
   legacy.prepare("INSERT INTO profiles (id,owner,name,created) VALUES ('old-writer','legacy-owner','Old writer insert','2026-01-01T00:00:00.000Z')").run();assert.equal(legacy.prepare("SELECT revision FROM profiles WHERE id='old-writer'").get().revision,1);
  }finally{legacy.close();}
 });
+
+
+test('Prepared manager demo saves one owner-scoped sourced pack atomically without provider calls or active monitoring',async()=>{
+ const owner='manager-demo';await call('/monitors/all-brands','POST',{enabled:true},owner);
+ const before=await(await runtime.dispatchFetch(origin+'/fixture')).json();
+ const [first,second]=await Promise.all([call('/demo-pack','POST',{pack:'coffee-launch-v1'},owner),call('/demo-pack','POST',{pack:'coffee-launch-v1'},owner)]);
+ assert.equal(first.status,200,JSON.stringify(first.value));assert.deepEqual(first.value,second.value);const ids=first.value;
+ const report=(await call('/reports/'+ids.reportId,'GET',undefined,owner)).value,pitch=(await call('/pitches/'+ids.pitchId,'GET',undefined,owner)).value;
+ assert.equal(report.status,'completed');assert.equal(report.sources.length,4);assert.match(report.body,/prepared demo document/i);assert.match(report.body,/not a live SignalForge model run/);assert.equal(report.usage.providerCalls,0);assert.equal(report.shareToken,null);assert.ok(report.labels.includes('Manager demo'));
+ assert.equal(pitch.revision,1);assert.equal(pitch.sources.length,4);assert.equal(pitch.agency,null);assert.equal(pitch.runs.length,0);assert.equal(pitch.versions.length,1);assert.doesNotMatch(pitch.body,/REPORT_PATH/);assert.ok(pitch.body.includes('/workspace/reports/'+ids.reportId));
+ const hub=(await call('/profiles/'+ids.profileId+'/workspace','GET',undefined,owner)).value;assert.equal(hub.counts.reports,1);assert.equal(hub.counts.projects,1);assert.equal(hub.automaticRule.enabled,0);
+ await call('/monitors/run-due','POST',{},owner);assert.equal((await db.prepare('SELECT enabled FROM monitors WHERE managed_profile_id=?').bind(ids.profileId).first()).enabled,0);
+ for(const [table,n] of [['reports',1],['profiles',1],['projects',1],['pitches',1],['pitch_versions',1],['monitors',1],['billing_usage',0]]){const col=table==='billing_usage'?'account':'owner';assert.equal((await db.prepare('SELECT count(*) AS n FROM '+table+' WHERE '+col+'=?').bind(owner).first()).n,n,table);}
+ assert.equal((await(await runtime.dispatchFetch(origin+'/fixture')).json()).calls,before.calls);
+});
+
+test('Prepared demo retries preserve report organization, brand edits and pitch revisions, and enforce auth and CSRF',async()=>{
+ const owner='manager-demo',ids=(await call('/demo-pack','POST',{pack:'coffee-launch-v1'},owner)).value;
+ await call('/reports/'+ids.reportId,'PATCH',{favorite:false,labels:['Reviewed demo']},owner);
+ const profile=(await call('/profiles/'+ids.profileId,'GET',undefined,owner)).value;
+ await call('/profiles/'+ids.profileId,'PATCH',{...profile,name:'Edited demo name',expectedRevision:1},owner);
+ await call('/pitches/'+ids.pitchId,'PATCH',{expectedRevision:1,body:'## Reviewed draft\nReviewer edits retained.'},owner);
+ assert.equal((await call('/demo-pack','POST',{pack:'coffee-launch-v1'},owner)).status,200);
+ assert.equal((await call('/profiles/'+ids.profileId,'GET',undefined,owner)).value.name,'Edited demo name');
+ const p=(await call('/pitches/'+ids.pitchId,'GET',undefined,owner)).value;assert.equal(p.revision,2);assert.match(p.body,/Reviewer edits retained/);assert.equal(p.versions.length,2);
+ const report=(await call('/reports/'+ids.reportId,'GET',undefined,owner)).value;assert.equal(report.favorite,false);assert.deepEqual(report.labels,['Reviewed demo']);
+ assert.equal((await call('/reports/'+ids.reportId,'GET',undefined,'demo-other')).status,404);
+ assert.equal((await call('/pitches/'+ids.pitchId,'GET',undefined,'demo-other')).status,404);
+ const other=(await call('/demo-pack','POST',{pack:'coffee-launch-v1'},'demo-other')).value;assert.notEqual(other.reportId,ids.reportId);assert.notEqual(other.pitchId,ids.pitchId);
+ assert.equal((await call('/demo-pack','POST',{pack:'coffee-launch-v1'},'')).status,401);
+ assert.equal((await call('/demo-pack','POST',{pack:'coffee-launch-v1'},owner,{Origin:'https://other.test'})).status,403);
+ assert.equal((await call('/demo-pack','POST',{pack:'coffee-launch-v1',owner:'demo-other'},owner)).status,400);
+ assert.equal((await call('/demo-pack','POST',{pack:'arbitrary'},owner)).status,400);
+ const key=(await call('/keys','POST',{name:'Demo read-only'},owner)).value;
+ assert.equal((await call('/demo-pack','POST',{pack:'coffee-launch-v1'},'',{Authorization:'Bearer '+key.token})).status,403);
+});
+test('Prepared demo rolls all records back on storage failure and is retryable',async()=>{
+ const owner='demo-rollback';await db.prepare("CREATE TRIGGER fail_demo_monitor BEFORE INSERT ON monitors WHEN NEW.owner='demo-rollback' BEGIN SELECT RAISE(ABORT,'Simulated demo transaction failure'); END").run();
+ const result=await call('/demo-pack','POST',{pack:'coffee-launch-v1'},owner);assert.equal(result.status,500);
+ for(const table of ['profiles','projects','reports','pitches','pitch_versions','monitors'])assert.equal((await db.prepare('SELECT count(*) AS n FROM '+table+' WHERE owner=?').bind(owner).first()).n,0,table);
+ await db.prepare('DROP TRIGGER fail_demo_monitor').run();assert.equal((await call('/demo-pack','POST',{pack:'coffee-launch-v1'},owner)).status,200);
+});
+test('A prepared demo is not charged as a provider report and does not reduce or bypass the eight-run daily limit',async()=>{
+ const owner='demo-daily-limit';assert.equal((await call('/demo-pack','POST',{pack:'coffee-launch-v1'},owner)).status,200);
+ for(let i=0;i<8;i++){const r=await call('/reports','POST',inputs,owner);assert.equal(r.status,201,JSON.stringify(r.value));await call('/reports/'+r.value.id,'GET',undefined,owner);}
+ assert.equal((await call('/reports','POST',inputs,owner)).status,429);
+ assert.equal((await db.prepare('SELECT count(*) AS n FROM reports WHERE owner=?').bind(owner).first()).n,9);
+});

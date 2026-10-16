@@ -1,0 +1,24 @@
+{
+  "scope": "Save the fixed prepared coffee launch demo into the signed-in owner's workspace",
+  "content": "One explicitly fictional brand/project, one prepared sourced report, one editable prepared pitch with initial version, and one paused managed monitoring rule",
+  "origin": "Research prepared in the assistant conversation from public pages reviewed 16 October 2026; not a newly generated SignalForge model run",
+  "checks": {
+    "tests": "120 of 120 passed",
+    "typecheck": "Passed",
+    "productionBuild": "Passed",
+    "isolation": "Authenticated owner only; cross-owner report and pitch reads rejected; CSRF and unauthenticated writes rejected; developer keys remain read-only",
+    "atomicity": "Actual Worker/D1 test verifies rollback of all six record types on a failed monitor insert",
+    "idempotency": "Concurrent and repeated requests use the same owner-derived IDs; report organization, brand edits and pitch versions remain unchanged",
+    "monitoring": "Paused rule inserted in the same D1 transaction as the brand; scheduler sync does not activate it",
+    "usage": "Zero provider calls or billing ledger entries; prepared demo does not consume or bypass the existing eight-provider-run daily limit"
+  },
+  "interface": "Overview uses the existing panel/button styles, then opens the saved report, playbook or brand workspace",
+  "theme": "No CSS or theme changes",
+  "schema": "No migration or new provider configuration",
+  "limits": [
+    "Only the fixed reviewed demo pack can be saved; this is not arbitrary report import",
+    "Saving again preserves existing edits and archive/monitoring choices",
+    "Starting new research, follow-ups or enabling monitoring is a separate action subject to normal usage",
+    "Source pages can change after the visible review date"
+  ]
+}
