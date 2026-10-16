@@ -3,12 +3,12 @@ import {useEffect,useRef,useState} from 'react';
 import {Plus,Search,Star,ArrowRight,Pencil,Trash2,X,Copy} from 'lucide-react';
 import {workflowCatalog} from '@/lib/workflow-catalog';
 import {WorkflowLaunch,WorkflowEditor} from './workflow-forms';
-type Props={data:any;busy:boolean;api:(path:string,method?:string,value?:unknown)=>Promise<any>;act:(fn:()=>Promise<unknown>,message?:string)=>Promise<void>;load:()=>Promise<any>;go:(view:string,id?:string)=>void};
+type Props={initialBrand?:string;data:any;busy:boolean;api:(path:string,method?:string,value?:unknown)=>Promise<any>;act:(fn:()=>Promise<unknown>,message?:string)=>Promise<void>;load:()=>Promise<any>;go:(view:string,id?:string)=>void};
 const emptyDraft=()=>({name:'',description:'',input:{subject:'',market:'Global',audience:'',competitors:'',context:'',window:'Last 90 days',attachmentIds:[]},steps:[{name:'Research',template:'brand',question:''}]});
 const categories=['Pitch','Competitive','Audiences','Brand strategy','Social','Employer'];
 function customCategories(w:any){return [...new Set<string>(w.steps.map((s:any)=>s.template==='pitch'?'Pitch':s.template==='competitors'?'Competitive':s.template==='audience'?'Audiences':'Brand strategy'))];}
-export default function WorkflowCatalog({data,busy,api,act,load,go}:Props){
- const[query,setQuery]=useState(''),[brand,setBrand]=useState(''),[author,setAuthor]=useState('any'),[since,setSince]=useState(''),[category,setCategory]=useState(''),[favorites,setFavorites]=useState(false),[draft,setDraft]=useState<any>(null),[selected,setSelected]=useState<any>(null);
+export default function WorkflowCatalog({initialBrand='',data,busy,api,act,load,go}:Props){
+ const[query,setQuery]=useState(''),[brand,setBrand]=useState(initialBrand),[author,setAuthor]=useState('any'),[since,setSince]=useState(''),[category,setCategory]=useState(''),[favorites,setFavorites]=useState(false),[draft,setDraft]=useState<any>(null),[selected,setSelected]=useState<any>(null);
  const panel=useRef<HTMLHeadingElement>(null);
  useEffect(()=>{if(draft||selected){panel.current?.focus();panel.current?.scrollIntoView({block:'nearest'});}},[!!draft,selected?.id]);
  const profile=data.profiles.find((p:any)=>p.id===brand);

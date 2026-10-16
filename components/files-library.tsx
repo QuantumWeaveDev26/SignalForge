@@ -2,8 +2,8 @@
 import {useEffect,useMemo,useState} from 'react';
 import {FileText,Upload,Download,Archive,RotateCcw,X} from 'lucide-react';
 
-export default function FilesLibrary({data,api,load,act,busy,initialProject=''}:any){
- const[files,setFiles]=useState<any[]>(data.attachments),[query,setQuery]=useState(''),[project,setProject]=useState(initialProject),[brand,setBrand]=useState(''),[archived,setArchived]=useState(false),[preview,setPreview]=useState<any>(null),[draft,setDraft]=useState<any>(null);
+export default function FilesLibrary({data,api,load,act,busy,initialProject='',initialBrand=''}:any){
+ const[files,setFiles]=useState<any[]>(data.attachments),[query,setQuery]=useState(''),[project,setProject]=useState(initialProject),[brand,setBrand]=useState(initialBrand),[archived,setArchived]=useState(false),[preview,setPreview]=useState<any>(null),[draft,setDraft]=useState<any>(null);
  useEffect(()=>{if(!archived)setFiles(data.attachments);},[data.attachments,archived]);
  async function refresh(){const values=await api('attachments?archived=true');setFiles(values);await load();setFiles(values);}
  useEffect(()=>{if(archived)act(async()=>{setFiles(await api('attachments?archived=true'));});else setFiles(data.attachments);},[archived]);

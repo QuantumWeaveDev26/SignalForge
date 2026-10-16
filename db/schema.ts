@@ -2,6 +2,7 @@ import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqli
 
 export const profiles = sqliteTable('profiles', {
   id: text('id').primaryKey(), owner: text('owner').notNull(), name: text('name').notNull(),
+  revision:integer('revision').notNull().default(1),
   website: text('website').notNull().default(''), market: text('market').notNull().default('Global'),
   competitors: text('competitors').notNull().default(''), audience: text('audience').notNull().default(''),
   context: text('context').notNull().default(''), created: text('created').notNull(),

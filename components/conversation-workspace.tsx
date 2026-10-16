@@ -3,10 +3,10 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {ArrowUp,Plus,Search,Paperclip,X,Loader2,MessageSquare,Square,Trash2,PanelLeftClose,PanelLeftOpen,Star,Download,Copy} from 'lucide-react';
 import Markdown,{SourceTrail} from './markdown';
 import {conversationMarkdown,mergeTurns} from '@/lib/conversation-policy';
-type Props={data:any;record:string;busy:boolean;api:(path:string,method?:string,value?:unknown)=>Promise<any>;act:(fn:()=>Promise<unknown>,message?:string)=>Promise<void>;load:()=>Promise<any>;go:(view:string,id?:string)=>void};
+type Props={initialBrand?:string;data:any;record:string;busy:boolean;api:(path:string,method?:string,value?:unknown)=>Promise<any>;act:(fn:()=>Promise<unknown>,message?:string)=>Promise<void>;load:()=>Promise<any>;go:(view:string,id?:string)=>void};
 const running=(status:string)=>['starting','queued','in_progress'].includes(status);
-export default function ConversationWorkspace({data,record,busy,api,act,load,go}:Props){
- const[thread,setThread]=useState<any>(null),[items,setItems]=useState<any[]>([]),[nextOffset,setNextOffset]=useState<number|null>(null),[query,setQuery]=useState(''),[historyBrand,setHistoryBrand]=useState(''),[drawer,setDrawer]=useState(true),[question,setQuestion]=useState(''),[brand,setBrand]=useState(''),[mode,setMode]=useState('strategy'),[fileIds,setFileIds]=useState<string[]>([]),[filesOpen,setFilesOpen]=useState(false),[loadError,setLoadError]=useState(''),[historyError,setHistoryError]=useState('');
+export default function ConversationWorkspace({initialBrand='',data,record,busy,api,act,load,go}:Props){
+ const[thread,setThread]=useState<any>(null),[items,setItems]=useState<any[]>([]),[nextOffset,setNextOffset]=useState<number|null>(null),[query,setQuery]=useState(''),[historyBrand,setHistoryBrand]=useState(initialBrand),[drawer,setDrawer]=useState(true),[question,setQuestion]=useState(''),[brand,setBrand]=useState(initialBrand),[mode,setMode]=useState('strategy'),[fileIds,setFileIds]=useState<string[]>([]),[filesOpen,setFilesOpen]=useState(false),[loadError,setLoadError]=useState(''),[historyError,setHistoryError]=useState('');
  const[project,setProject]=useState(''),[persona,setPersona]=useState({name:'',description:''}),[personaOpen,setPersonaOpen]=useState(false),[favorites,setFavorites]=useState(false),[historyProject,setHistoryProject]=useState(''),[olderCursor,setOlderCursor]=useState<string|null>(null),[localNotice,setLocalNotice]=useState(''),[exporting,setExporting]=useState(false);
  const initialized=useRef(false),modeDirty=useRef(false),sendLock=useRef(false),createId=useRef(''),createContext=useRef('');
  const request=useRef<{signature:string;id:string}|null>(null);

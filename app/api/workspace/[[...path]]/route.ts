@@ -11,6 +11,7 @@ import {listContextFiles,uploadContextFile,previewContextFile,downloadContextFil
 import {listAgencies,saveAgency,listPitches,pitchState,createPitch,updatePitch,startPitchResearch,importPitchResearch,pitchVersion,restorePitchVersion} from '@/lib/pitches';
 import {monitorHistory} from '@/lib/monitor-history';
 import {reportLibrary} from '@/lib/report-library';
+import {saveProfile,brandWorkspace} from '@/lib/brand-workspace';
 export const dynamic='force-dynamic';
 function json(data:unknown,status=200){return Response.json(data,{status,headers:{'Cache-Control':'no-store'}});}
 async function body(req:Request,limit=60000){if(Number(req.headers.get('content-length')||0)>limit)throw new AppError('Request is too large.',413);const text=await req.text();if(text.length>limit)throw new AppError('Request is too large.',413);try{const value=JSON.parse(text);if(!value||typeof value!=='object'||Array.isArray(value))throw new Error();return value;}catch{throw new AppError('Invalid request body.');}}
@@ -93,8 +94,10 @@ async function handle(req:Request){
       if(method==='POST'&&action==='stop'){await owned('workflow_runs',record,owner);const time=now();const stopped=await run("UPDATE workflow_runs SET status='cancelled',background_enabled=0,updated=? WHERE id=? AND owner=? AND (lease_until IS NULL OR lease_until<?)",time,record,owner,time);if(!stopped.meta.changes)throw new AppError('A step is starting. Wait a moment, then stop remaining steps.',409);return json({ok:true});}
     }
     if(area==='profiles'){
+      if(method==='GET'&&record&&action==='workspace'){if(who.api)throw new AppError('Sign in to open the brand workspace.',403);return json(await brandWorkspace(record,owner));}
       if(method==='GET')return json(record?await owned('profiles',record,owner):await all('SELECT * FROM profiles WHERE owner=? ORDER BY created DESC',owner));
-      if(method==='POST'){const v=await body(req);const name=bounded(v.name,'Brand or topic name',200,true);const profileId=id();await run('INSERT INTO profiles (id,owner,name,website,market,competitors,audience,context,created) VALUES (?,?,?,?,?,?,?,?,?)',profileId,owner,name,bounded(v.website,'Website',500),bounded(v.market,'Market',100)||'Global',bounded(v.competitors,'Competitors',1000),bounded(v.audience,'Audience',500),bounded(v.context,'Context',12000),now());await syncBrandMonitors(owner);return json(await owned('profiles',profileId,owner),201);}
+      if(method==='POST'&&!record)return json(await saveProfile(owner,await body(req)),201);
+      if(method==='PATCH'&&record&&!action)return json(await saveProfile(owner,await body(req),record));
       if(method==='DELETE'&&record){await owned('profiles',record,owner);await db().batch([db().prepare('UPDATE attachments SET profile_id=NULL WHERE profile_id=? AND owner=?').bind(record,owner),db().prepare('DELETE FROM monitors WHERE managed_profile_id=? AND owner=?').bind(record,owner),db().prepare('DELETE FROM profiles WHERE id=? AND owner=?').bind(record,owner)]);return json({ok:true});}
     }
     if(area==='reports'){

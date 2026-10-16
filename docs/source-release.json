@@ -1,10 +1,10 @@
 {
   "site_url": "https://signalforge-research-nr.brandmintai.chatgpt.site",
   "sites_project_id": "appgprj_6acf5cb489c08191a409ea6fa27858a1",
-  "sites_source_commit": "e0ea9c103350af7bbbba87326993eacb0784646c",
+  "sites_source_commit": "cc0aef45bdc3a4ba15c171bbb43667e0c4d0122a",
   "source_export": "git archive with Windows newline conversion disabled; tracked application blobs and modes checked against exact published Sites commit",
   "synchronized_date": "2026-10-16",
-  "published_version": 18,
+  "published_version": 19,
   "excluded_tracked_files": [
     "tsconfig.tsbuildinfo"
   ],
@@ -21,12 +21,13 @@
     "lockfile_reconciliation": "Completed in canonical Sites version18; package-lock.json matches published source, with no GitHub-only dependency overrides."
   },
   "verification": {
-    "fixture_policy_tests": 104,
+    "fixture_policy_tests": 110,
     "typecheck": "passed",
     "production_build": "passed",
-    "browser_qa_local": "132 fictional reports traversed without duplicate IDs; injected page failure recovery; old-report combined filters; grid/filter return and reload; favorites; overview count caption corrected",
-    "live_site_browser_qa": "passed on version18: 10-of-10 counts; combined search/type/status finds expected report; favorites filter and restoration; report-return/reload preserves grid and filters; clear/refresh restores all10; no console errors",
-    "theme": "preserved; no theme CSS changes",
+    "browser_qa_local": "brand edit conflicts retain draft; reload locks inputs; saved revision; paused automatic monitor preserved; research prefill; brand-linked views; old chat context snapshot unchanged",
+    "live_site_browser_qa": "passed on version19: fictional brand created/edited to revision2; workspace and new-chat brand default survive reload; managed weekly India rule retains paused state and due time with renamed context and no scans; fresh research prefill; linked report/files/workflow filters correct; no paid provider calls",
+    "theme": "preserved",
+    "feature_limits": "latest10 previews with all-count links; no full brand revision-history UI or global active-brand filter claimed",
     "github_actions": "must pass on exact pushed release commit; see repository Actions history"
   }
 }

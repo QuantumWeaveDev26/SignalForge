@@ -1,0 +1,33 @@
+{
+  "verifiedOn": "2026-10-16",
+  "scope": "Editable saved brand context and brand workspace using the existing theme; no new provider account or paid research call.",
+  "checks": {
+    "regressionTests": 110,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "isolatedBrowser": [
+      "Saved-brand overview with 132 associated reports, one project, one file, one saved workflow, one existing conversation and paused automatic rule",
+      "Conflicting edit rejected with draft retained",
+      "Explicit reload disables fields while waiting; refreshed revision can be saved",
+      "Revised name/market/audience/context retained; automatic monitoring remains paused",
+      "New research prefilled with website and revised context without launching a report",
+      "Files and workflows open with the brand filter selected",
+      "New chat selects brand and retains it on reload",
+      "Existing saved chat retains the original brand snapshot",
+      "Full brand report library includes all 132 associated reports"
+    ]
+  },
+  "schema": {
+    "migration": "0014_exotic_titania.sql",
+    "forward": "Add profiles.revision with default 1; existing fields/IDs remain unchanged.",
+    "rollback": "Older application code can continue creating/reading profiles; retain the additive revision column. Revert source without dropping user records.",
+    "atomicity": "Profile revision and managed-rule inputs update in one D1 transaction; simulated second-write failure rolls both back."
+  },
+  "limits": [
+    "Revision numbers prevent lost updates; no complete brand edit-history or restore facility is included.",
+    "Workspace previews show latest 10 records; full report and file views are linked.",
+    "Only explicitly brand-associated records are counted; counts are not market measurements.",
+    "New briefs/chats use revised context; saved workflow templates/manual monitors and prior reports/chats/pitches keep captured inputs.",
+    "A global brand selection spanning every independent view and shared-team permissions remain pending."
+  ]
+}

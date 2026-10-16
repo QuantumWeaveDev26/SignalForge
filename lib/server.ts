@@ -83,11 +83,12 @@ export async function refresh(row: any) {
   if(row.status==='starting'&&Date.now()-new Date(row.created).getTime()>60000){await run("UPDATE reports SET status='failed',error='The launch was interrupted. Start a new research run.',updated=? WHERE id=? AND owner=? AND status='starting'",now(),row.id,row.owner);return owned('reports',row.id,row.owner);}
   return row;
 }
+export function managedBrandInput(profile:any){return {...validateResearch({template:'brand',subject:profile.name,market:'India',audience:profile.audience,competitors:profile.competitors,context:[profile.website,profile.context].filter(Boolean).join('\n').slice(0,12000),window:'Last 7 days',question:'Produce a weekly India briefing: investigate newly evidenced brand, product, competitor and category developments from the last seven days. Cite dated sources; distinguish changes from background context. If no material developments can be verified, say so. Public web evidence only; do not invent social sentiment, ad performance or audience-panel metrics.'}),profileId:profile.id};}
 export async function syncBrandMonitors(owner:string){
   if(!(await one('SELECT monitor_all_brands FROM preferences WHERE owner=?',owner))?.monitor_all_brands)return;
   const profiles=await all('SELECT * FROM profiles WHERE owner=?',owner);
   for(const profile of profiles){
-    const input=validateResearch({template:'brand',subject:profile.name,market:'India',audience:profile.audience,competitors:profile.competitors,context:[profile.website,profile.context].filter(Boolean).join('\n').slice(0,12000),window:'Last 7 days',question:'Produce a weekly India briefing: investigate newly evidenced brand, product, competitor and category developments from the last seven days. Cite dated sources; distinguish changes from background context. If no material developments can be verified, say so. Public web evidence only; do not invent social sentiment, ad performance or audience-panel metrics.'});
+    const input=managedBrandInput(profile);
     const time=now();
     await run('INSERT OR IGNORE INTO monitors (id,owner,name,input,cadence,next_run,created,managed_profile_id) VALUES (?,?,?,?,?,?,?,?)',id(),owner,profile.name.slice(0,170)+' · Weekly India',JSON.stringify({...input,profileId:profile.id}),'weekly',time,time,profile.id);
   }

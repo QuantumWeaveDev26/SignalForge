@@ -32,8 +32,8 @@
         "navigationScreenshot"
       ],
       "status": "partial",
-      "current": "Saved brand/topic profiles populate research briefs; projects and reports can retain a brand association. Project research can populate saved brand context.",
-      "gap": "Persistent selected-brand context linking chats, projects, files, workflows and reports.",
+      "current": "Editable owner-scoped brand/topic profiles with revision-checked saves, safe website links, search and a saved brand workspace. The workspace counts all explicitly associated reports, projects, active/archived files, saved workflows and conversations, and previews latest 10 reports/projects/active files. It opens the full brand-filtered report library, files and workflows, starts a brand-prefilled chat or research brief, and exposes the automatic weekly India rule/history. Edits atomically refresh an existing automatic rule while preserving pause/schedule/history. Existing research and chat/workflow/pitch snapshots remain unchanged; new chats capture the current website and revision.",
+      "gap": "One global persistent selected-brand filter across every independent workspace view, team collaboration and brand revision-history restoration remain pending. Existing workflow templates and manual monitors retain captured inputs until explicitly changed.",
       "acceptance": [
         "Switching brands scopes all related content consistently.",
         "Reloading preserves the selection and unauthorized users cannot read another owner's records."
@@ -273,14 +273,15 @@
     "Expand developer APIs, teams and commercial operations once access and terms are established."
   ],
   "verification": {
-    "releaseScope": "Full-account report library search, filters, metadata pagination and retained filter/view state using the frozen theme; full Waldo parity remains incomplete.",
+    "releaseScope": "Editable saved brands and brand workspaces with safe recurring-context updates and preserved historical snapshots; current theme retained; full Waldo parity remains incomplete.",
     "evidence": [
       "Real saved chat with contextual follow-up and a three-step background workflow were verified in the preceding releases.",
       "Google Cloud Scheduler executed a real monitoring scan with cited saved output; duplicate dispatch produced one report.",
       "Worker API tests exercise actual PDF/DOCX parsers, exact original downloads, file context in provider requests, invalid/scanned inputs, archive/restore and cross-owner isolation.",
       "Worker integration tests verify pitch snapshots, concurrent revision conflicts, restore, owner isolation, duplicate launch suppression, real file context in requests, explicit imports and quota enforcement.",
       "98 fixture/policy tests pass, including monitor ownership, baseline selection, scope changes, duplicate dispatch, pagination and shared-report isolation. Two real isolated provider scans completed with six and four cited sources; the second retained the first baseline and generated a comparison section.",
-      "104 fixture/policy tests pass; six added Worker integration tests cover an older report beyond 100, combined/literal filters, tied-date pagination/new inserts, input validation, favorites/owner isolation and developer-key compatibility. Isolated actual Workspace browser QA reaches all 132 fictional reports, recovers after a simulated page failure, and preserves filters/view after report navigation and reload."
+      "104 fixture/policy tests pass; six added Worker integration tests cover an older report beyond 100, combined/literal filters, tied-date pagination/new inserts, input validation, favorites/owner isolation and developer-key compatibility. Isolated actual Workspace browser QA reaches all 132 fictional reports, recovers after a simulated page failure, and preserves filters/view after report navigation and reload.",
+      "110 fixture/policy tests pass. New checks cover concurrent brand CAS edits, ownership and read-only API boundaries, old/new chat context snapshots, unchanged report/workflow inputs, automatic-rule pause/schedule preservation, atomic rollback, all-report counts beyond 100, active/archived files and additive schema compatibility. Actual Workspace browser QA exercises stale-edit rejection with draft retention, reload locking, revised research prefill and brand-linked report/files/workflow/chat navigation."
     ],
     "limits": [
       "Provider-dependent social/ad/audience datasets are not connected.",

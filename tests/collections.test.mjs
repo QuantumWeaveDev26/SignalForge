@@ -613,3 +613,67 @@ test('Report library endpoint preserves the legacy read-only developer-key contr
  assert.equal((await call('/report-library','GET',undefined,'',{Authorization:'Bearer '+token})).status,403);
  const list=await call('/reports','GET',undefined,'',{Authorization:'Bearer '+token});assert.equal(list.status,200);assert.ok(Array.isArray(list.value));assert.equal(list.value.length,100);
 });
+
+
+const brandValues={name:'QA original brand',market:'India',website:'https://example.com/original',audience:'Original audience',competitors:'Original competitor',context:'Original supplied context'};
+test('Brand edits enforce revisions and cannot alter ownership, identity or creation time',async()=>{
+ const owner='brand-cas',p=(await call('/profiles','POST',brandValues,owner)).value;assert.equal(p.revision,1);
+ const values={...brandValues,name:'QA edited brand',expectedRevision:1,owner:'forged-owner',id:'forged-id',revision:999,created:'forged'};
+ const results=await Promise.all([call('/profiles/'+p.id,'PATCH',values,owner),call('/profiles/'+p.id,'PATCH',{...values,name:'Other tab edit'},owner)]);assert.deepEqual(results.map(r=>r.status).sort(),[200,409]);
+ const saved=(await call('/profiles/'+p.id,'GET',undefined,owner)).value;assert.equal(saved.id,p.id);assert.equal(saved.owner,owner);assert.equal(saved.created,p.created);assert.equal(saved.revision,2);
+ for(const expectedRevision of [undefined,0,-1,1.5,'2'])assert.equal((await call('/profiles/'+p.id,'PATCH',{...brandValues,expectedRevision},owner)).status,400);
+ assert.equal((await call('/profiles/'+p.id,'PATCH',{...brandValues,name:'',expectedRevision:2},owner)).status,400);
+ assert.equal((await call('/profiles/'+p.id,'PATCH',{...brandValues,context:'x'.repeat(12001),expectedRevision:2},owner)).status,400);
+ assert.equal((await call('/profiles/'+p.id,'PATCH',{...brandValues,expectedRevision:2},'brand-intruder')).status,404);
+ assert.equal((await call('/profiles/'+p.id+'/workspace','GET',undefined,'brand-intruder')).status,404);
+ assert.equal((await call('/profiles/'+p.id+'/workspace','GET',undefined,'')).status,401);
+});
+test('Updating brand context preserves report, chat and saved-workflow snapshots while new chats use the new revision',async()=>{
+ const owner='brand-snapshots',p=(await call('/profiles','POST',brandValues,owner)).value;
+ const conversation=(await call('/conversations','POST',{profileId:p.id},owner)).value;
+ const savedWorkflow=(await call('/workflows','POST',{name:'Saved original workflow',input:{...inputs,profileId:p.id,subject:p.name,context:p.context},steps},owner)).value;
+ const report=(await call('/reports','POST',{...inputs,profileId:p.id,subject:p.name,context:p.context},owner)).value;await call('/reports/'+report.id,'GET',undefined,owner);
+ const original=await db.prepare('SELECT title,input,body FROM reports WHERE id=?').bind(report.id).first();
+ const saved=(await call('/profiles/'+p.id,'PATCH',{...brandValues,name:'QA updated brand',website:'https://example.com/new',context:'New supplied context',expectedRevision:1},owner)).value;
+ assert.deepEqual((await db.prepare('SELECT title,input,body FROM reports WHERE id=?').bind(report.id).first()),original);
+ assert.deepEqual((await call('/conversations/'+conversation.id,'GET',undefined,owner)).value.context,conversation.context);
+ assert.deepEqual((await call('/workflows/'+savedWorkflow.id,'GET',undefined,owner)).value.input,savedWorkflow.input);
+ const next=(await call('/conversations','POST',{profileId:p.id},owner)).value;assert.equal(next.context.context,'New supplied context');assert.equal(next.context.name,saved.name);assert.equal(next.context.website,'https://example.com/new');assert.equal(next.context.revision,2);assert.equal(conversation.context.revision,1);
+});
+test('Explicit brand edit updates automatic weekly inputs atomically without resuming or rescheduling a rule',async()=>{
+ const owner='brand-monitor';await call('/monitors/all-brands','POST',{enabled:true},owner);
+ const p=(await call('/profiles','POST',brandValues,owner)).value;let m=await db.prepare('SELECT * FROM monitors WHERE owner=? AND managed_profile_id=?').bind(owner,p.id).first();assert.ok(m);
+ await call('/monitors/'+m.id,'PATCH',{enabled:false},owner);await db.prepare('UPDATE monitors SET lease_until=?,last_report=? WHERE id=?').bind('2026-11-01T00:00:00.000Z','prior-scan',m.id).run();
+ m=await db.prepare('SELECT * FROM monitors WHERE id=?').bind(m.id).first();
+ const manual=(await call('/monitors','POST',{name:'Manual question',cadence:'monthly',input:inputs},owner)).value;
+ assert.equal((await call('/profiles/'+p.id,'PATCH',{...brandValues,name:'QA renamed',market:'US',context:'Changed supplied evidence',expectedRevision:1},owner)).status,200);
+ const updated=await db.prepare('SELECT * FROM monitors WHERE id=?').bind(m.id).first();assert.equal(updated.enabled,0);for(const key of ['id','owner','cadence','created','next_run','lease_until','last_report'])assert.equal(updated[key],m[key]);const input=JSON.parse(updated.input);assert.equal(input.subject,'QA renamed');assert.equal(input.market,'India');assert.match(input.context,/Changed supplied evidence/);assert.equal(input.profileId,p.id);
+ assert.equal((await db.prepare('SELECT input FROM monitors WHERE id=?').bind(manual.id).first()).input,manual.input);assert.equal((await db.prepare('SELECT count(*) AS n FROM monitors WHERE owner=?').bind(owner).first()).n,2);
+});
+test('Failed automatic-rule synchronization rolls brand edits back and remains retryable',async()=>{
+ const owner='brand-rollback';await call('/monitors/all-brands','POST',{enabled:true},owner);const p=(await call('/profiles','POST',brandValues,owner)).value;
+ await db.prepare("CREATE TRIGGER qa_brand_sync_failure BEFORE UPDATE ON monitors WHEN NEW.owner='brand-rollback' BEGIN SELECT RAISE(ABORT,'Simulated sync interruption'); END").run();
+ try{assert.equal((await call('/profiles/'+p.id,'PATCH',{...brandValues,name:'Should roll back',expectedRevision:1},owner)).status,500);const saved=(await call('/profiles/'+p.id,'GET',undefined,owner)).value;assert.equal(saved.revision,1);assert.equal(saved.name,p.name);}finally{await db.prepare('DROP TRIGGER qa_brand_sync_failure').run();}
+ assert.equal((await call('/profiles/'+p.id,'PATCH',{...brandValues,name:'Retry saved',expectedRevision:1},owner)).value.revision,2);
+});
+test('Brand workspace counts all associated reports and scopes previews/files to the owner without provider calls',async()=>{
+ const f=await libraryFixture();await db.prepare('UPDATE reports SET profile_id=? WHERE id=?').bind(f.brand,'foreign-library').run();
+ const upload=await uploadFixture(f.owner,'brand-context.txt','Brand context document',{profileId:f.brand});assert.equal(upload.status,201);const file=upload.value;
+ const before=await(await runtime.dispatchFetch(origin+'/fixture')).json();let hub=(await call('/profiles/'+f.brand+'/workspace','GET',undefined,f.owner)).value;
+ assert.equal(hub.counts.reports,132);assert.equal(hub.reports.length,10);assert.equal(hub.counts.projects,1);assert.equal(hub.counts.activeFiles,1);assert.equal(hub.files[0].id,file.id);assert.doesNotMatch(JSON.stringify(hub),/PRIVATE REPORT BODY|FOREIGN TITLE|PRIVATE_SHARE_TOKEN/);assert.ok(hub.reports.every(r=>r.body===undefined));
+ await call('/attachments/'+file.id,'PATCH',{archived:true},f.owner);hub=(await call('/profiles/'+f.brand+'/workspace','GET',undefined,f.owner)).value;assert.equal(hub.counts.activeFiles,0);assert.equal(hub.counts.archivedFiles,1);assert.equal(hub.files.length,0);
+ const after=await(await runtime.dispatchFetch(origin+'/fixture')).json();assert.equal(after.calls,before.calls);
+ const key=(await call('/keys','POST',{name:'Brand legacy contract'},f.owner)).value;
+ assert.equal((await call('/profiles/'+f.brand+'/workspace','GET',undefined,'',{Authorization:'Bearer '+key.token})).status,403);
+ assert.equal((await call('/profiles/'+f.brand,'GET',undefined,'',{Authorization:'Bearer '+key.token})).status,200);
+ assert.equal((await call('/profiles/'+f.brand,'PATCH',{...brandValues,expectedRevision:1},'',{Authorization:'Bearer '+key.token})).status,403);
+});
+test('Additive profile revision migration preserves old rows and old create/read paths',()=>{
+ const legacy=new DatabaseSync(':memory:');try{
+  for(const file of fs.readdirSync('drizzle').filter(f=>f.endsWith('.sql')&&f<'0014').sort())for(const sql of fs.readFileSync('drizzle/'+file,'utf8').split('--> statement-breakpoint'))if(sql.trim())legacy.exec(sql);
+  legacy.prepare("INSERT INTO profiles (id,owner,name,context,created) VALUES ('legacy-brand','legacy-owner','Legacy name','Legacy context','2026-01-01T00:00:00.000Z')").run();
+  const before=legacy.prepare('SELECT * FROM profiles').get();legacy.exec(fs.readFileSync('drizzle/0014_exotic_titania.sql','utf8'));
+  const after=legacy.prepare('SELECT * FROM profiles').get();assert.equal(after.revision,1);for(const key of Object.keys(before))assert.equal(after[key],before[key]);
+  legacy.prepare("INSERT INTO profiles (id,owner,name,created) VALUES ('old-writer','legacy-owner','Old writer insert','2026-01-01T00:00:00.000Z')").run();assert.equal(legacy.prepare("SELECT revision FROM profiles WHERE id='old-writer'").get().revision,1);
+ }finally{legacy.close();}
+});
