@@ -10,14 +10,14 @@ SignalForge is a business research and strategy workspace with an original visua
 - Saved research conversations, follow-up questions, brand/persona/project context, web research and source-linked reports.
 - Editable saved-brand workspaces with revision conflict protection, linked report totals/latest previews and related projects/files/workflows. Edits update automatic-monitor inputs while retaining pause/schedule/history; earlier research and chat context snapshots remain unchanged.
 - Editable research workflows with background execution, saved step outputs, retries and signed provider-webhook completion.
-- Projects, brands/topics and a complete saved-report library: search, combined filters, favorites and labels across all saved reports, with pagination, reliable retry, grid/list views and remembered filters. Markdown downloads and revocable report sharing are supported.
+- Projects, brands/topics and a complete saved-report library: search, combined filters, favorites and labels across all saved reports, with pagination, reliable retry, grid/list views and remembered filters. Markdown and editable Word (DOCX) downloads, plus revocable report sharing, are supported.
 - A Files library for PDF, DOCX, TXT, CSV and Markdown: extracted-text previews, original downloads, project/brand organization, archive/restore and reuse in research. File limits and OCR limitations are disclosed in the product.
-- Saved client/RFP briefs, reusable agency credentials, cited pitch research, editable playbooks, revision history/restore and Markdown exports.
+- Saved client/RFP briefs, reusable agency credentials, cited pitch research, editable playbooks, revision history/restore and Markdown or editable Word exports.
 - Daily/weekly/monthly monitoring rules, report history and an authenticated hourly Google Cloud dispatcher that respects each rule's own cadence. Repeat briefings can be compared with the prior completed scan, with source differences, an AI change summary and duplicate-dispatch protection.
 - Scoped, hashed and revocable read-only workspace API keys and JSON-RPC MCP tools for saved reports and profiles.
 - Usage/concurrency limits, source-coverage disclosures and disabled states for services that have not been connected.
 
-The acceptance records in docs/ describe tested behavior and remaining limits. docs/source-release.json identifies the exact published Sites source commit mirrored into this repository. See docs/repository-maintenance.md for future release synchronization.
+Word exports include linked source appendices and disclose status/coverage limits; native Office visual pagination has not been verified. The acceptance records in docs/ describe tested behavior and remaining limits. docs/source-release.json identifies the exact published Sites source commit mirrored into this repository. See docs/repository-maintenance.md for future release synchronization.
 
 ## Remaining integrations and limitations
 

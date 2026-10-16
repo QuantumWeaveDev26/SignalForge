@@ -4,7 +4,7 @@ import path from 'node:path';
 import http from 'node:http';
 import {build} from 'esbuild';
 import {Miniflare} from 'miniflare';
-const brandMode=process.argv.includes('--brand');
+const brandMode=process.argv.includes('--brand'),wordMode=process.argv.includes('--word');
 const port=57932,origin='http://127.0.0.1:'+port;
 const alias={name:'workspace-alias',setup(b){b.onResolve({filter:/^@\//},args=>{const name=path.resolve(args.path.replace(/^@\//,''));return {path:['.ts','.tsx',''].map(ext=>name+ext).find(f=>fs.existsSync(f))};});}};
 const client=await build({stdin:{resolveDir:process.cwd(),loader:'tsx',contents:`import React from 'react';import {createRoot} from 'react-dom/client';import Workspace from './components/workspace';createRoot(document.getElementById('root')).render(<Workspace/>);`},bundle:true,write:false,format:'esm',platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"development"'},plugins:[alias]});
@@ -13,6 +13,15 @@ const runtime=new Miniflare({modules:true,script:worker.outputFiles[0].text,comp
 const db=await runtime.getD1Database('DB');for(const file of fs.readdirSync('drizzle').filter(f=>f.endsWith('.sql')).sort())for(const sql of fs.readFileSync('drizzle/'+file,'utf8').split('--> statement-breakpoint'))if(sql.trim())await db.prepare(sql).run();
 for(let i=0;i<132;i++)await db.prepare('INSERT INTO reports (id,owner,title,template,subject,market,question,input,status,created,updated,favorite,labels,body) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind('library-'+String(i).padStart(3,'0'),'library-browser-qa',i===0?'QA Historic needle beyond 100':'QA Library report '+String(i).padStart(3,'0'),i===0?'competitors':'brand','QA Example','India','Clearly fictional browser QA record; no real research claims.','{}','completed',i===0?'2025-01-01T00:00:00.000Z':'2026-01-01T00:00:00.000Z','2026-01-01T00:00:00.000Z',i===0?1:0,JSON.stringify(i===0?['Archived evidence']:['Recent']),'# QA report\nFictional test record only.').run();
 async function call(endpoint,method='GET',value){const r=await runtime.dispatchFetch(origin+'/api/workspace'+endpoint,{method,headers:{Origin:origin,'Content-Type':'application/json'},...(value===undefined?{}:{body:JSON.stringify(value)})});const data=await r.json();if(!r.ok)throw new Error(data.error);return data;}
+let qaPitch;
+if(wordMode){
+ const source=JSON.stringify([{title:'Fictional QA evidence',url:'https://example.com/evidence?a=1&b=2',cited:true}]);
+ await db.prepare('UPDATE reports SET body=?,sources=? WHERE id=?').bind('# Fictional QA research\n\n## Executive read\nQualified **recommendation** [1]. Not a real research finding.\n\n- Check evidence\n- Confirm scope\n\n| Option | Evidence |\n|---|---|\n| Atlas | User supplied |',source,'library-131').run();
+ const agency=await call('/agencies','POST',{name:'QA agency',credentials:'Fictional research capability',proof:'Unverified QA proof'});
+ qaPitch=await call('/pitches','POST',{input:{name:'QA Word playbook',client:'QA Fictional Atlas',market:'India',brief:'Fictional QA brief only.',requirements:'Preserve citations and revision.',agencyId:agency.id,attachmentIds:[]}});
+ await db.prepare('UPDATE pitches SET body=?,sources=? WHERE id=?').bind('## Selected angle\nEdited fictional recommendation [1].',source,qaPitch.id).run();
+ console.log('QA pitch: '+origin+'/workspace/pitches/'+qaPitch.id);
+}
 let qaBrand;
 if(brandMode){
  await call('/monitors/all-brands','POST',{enabled:true});qaBrand=await call('/profiles','POST',{name:'QA Atlas brand',market:'India',website:'https://example.com/atlas',audience:'QA retail buyers',competitors:'QA rival',context:'Fictional original brand context.'});

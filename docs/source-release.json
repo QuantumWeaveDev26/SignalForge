@@ -1,10 +1,10 @@
 {
   "site_url": "https://signalforge-research-nr.brandmintai.chatgpt.site",
   "sites_project_id": "appgprj_6acf5cb489c08191a409ea6fa27858a1",
-  "sites_source_commit": "cc0aef45bdc3a4ba15c171bbb43667e0c4d0122a",
+  "sites_source_commit": "b5bbafbc06f90c2ead7947c28e9120d8da8f924d",
   "source_export": "git archive with Windows newline conversion disabled; tracked application blobs and modes checked against exact published Sites commit",
   "synchronized_date": "2026-10-16",
-  "published_version": 19,
+  "published_version": 20,
   "excluded_tracked_files": [
     "tsconfig.tsbuildinfo"
   ],
@@ -21,13 +21,16 @@
     "lockfile_reconciliation": "Completed in canonical Sites version18; package-lock.json matches published source, with no GitHub-only dependency overrides."
   },
   "verification": {
-    "fixture_policy_tests": 110,
+    "fixture_policy_tests": 116,
     "typecheck": "passed",
     "production_build": "passed",
-    "browser_qa_local": "brand edit conflicts retain draft; reload locks inputs; saved revision; paused automatic monitor preserved; research prefill; brand-linked views; old chat context snapshot unchanged",
-    "live_site_browser_qa": "passed on version19: fictional brand created/edited to revision2; workspace and new-chat brand default survive reload; managed weekly India rule retains paused state and due time with renamed context and no scans; fresh research prefill; linked report/files/workflow filters correct; no paid provider calls",
+    "docx_package_checks": "report/pitch ZIP/XML/link safety, formatting, tables and Unicode covered by offline tests; report UI download parsed with python-docx: 17 paragraphs and 1 table",
+    "browser_qa_local": "actual report Word download succeeded; download-event observer subsequently stalled",
+    "live_site_browser_qa": "postdeploy UI and pitch-browser download checks not completed: CUA could not restart with disconnected E-drive cwd; successful local report download/package verification is recorded separately",
+    "visual_layout_limit": "render_docx attempted; native LibreOffice unavailable; Office pagination/render appearance unverified",
     "theme": "preserved",
-    "feature_limits": "latest10 previews with all-count links; no full brand revision-history UI or global active-brand filter claimed",
-    "github_actions": "must pass on exact pushed release commit; see repository Actions history"
+    "provider_calls": "none required for DOCX export",
+    "github_actions": "must pass on exact pushed release commit; see repository Actions history",
+    "deployment": "Sites version20 deployment succeeded; public URL and environment revision9 unchanged"
   }
 }

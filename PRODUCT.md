@@ -61,3 +61,9 @@ The target is a brand and market intelligence platform covering Waldo's four ser
 3. The user's context (brief, brands, files) is what makes the answer theirs.
 4. Research is a conversation that continues, not a one-shot answer.
 5. Serve the four audiences across strategy, pitching, monitoring, and developer access; judge progress by working capabilities and real evidence.
+
+## Editable Word exports
+
+Saved completed/partial research reports and saved pitch playbooks download as editable DOCX without a provider call. Reports include the question, status, market, creation date, body, numbered citation links, source appendix and limitations. Pitch playbooks include the saved revision, intake, supplied agency snapshot, body, file identifiers and source trail. Pitch exports are disabled while the editor has unsaved changes. Existing Markdown and Print/PDF exports remain available.
+
+The export supports the product Markdown subset, headings, emphasis, bullet/numbered lists, links, code, and simple pipe tables. Wide tables become labeled records to preserve legibility. Images are preserved as text references, not embedded. It is a saved-content document, not a slide deck; report follow-up chat and the separate monitoring comparison panel are not included. No shared links or access grants are created.

@@ -1,0 +1,29 @@
+{
+  "scope": "Editable DOCX export of saved reports and saved pitch playbooks",
+  "theme": "Unchanged; existing toolbar button styles reused; no CSS edits",
+  "accounts": "No new provider account, server secret, schema migration or network request",
+  "checks": {
+    "suite": "116 of 116 fixture and policy tests passed",
+    "typecheck": "Passed",
+    "productionBuild": "Passed",
+    "package": "All seven OOXML XML parts validate; all internal relationship targets resolve",
+    "evidence": "Citation numbering, safe links and source appendix preserved; unmatched citations remain literal",
+    "states": "Partial reports include status and run limitations; queued, running, failed, stopped and empty reports cannot export as finished research",
+    "pitch": "Saved revision, intake, agency snapshot, edited playbook, file identifiers and source trail retained without mutation; UI disables Word export for dirty/busy pitch editors",
+    "security": "XML escaping, invalid-control filtering and safe hyperlink protocols tested; no macros, external images, template attachments or unrelated owner/provider/baseline fields",
+    "browser": "Actual isolated Workspace Export Word click downloaded a DOCX. The downloaded ZIP/XML and python-docx parsing passed: 17 paragraphs and one table, including the fictional report, sources and limits.",
+    "providerCalls": 0
+  },
+  "verificationLimits": [
+    "The browser download-event observer stalled after the download succeeded. Its restarted runtime cannot start because this chat's original E:\\REV working directory is disconnected. Remaining pitch-browser and post-deploy UI checks could not be completed.",
+    "Packaged render_docx.py was attempted; native LibreOffice soffice.exe is not installed. Native Office pagination and visual layout are not certified."
+  ],
+  "productLimits": [
+    "Supports headings, emphasis, lists, links, code and simple pipe tables; wide tables become labeled records",
+    "Image Markdown is retained as text references; images and charts are not embedded",
+    "Exports saved report text and sources, excluding follow-up chats and the separate monitoring comparison panel",
+    "Does not create public share links, Google Docs, slides or team access",
+    "Existing Markdown and Print/PDF options remain available"
+  ],
+  "rollback": "Revert the Word export module and the two added toolbar controls; no database or stored record changes"
+}
