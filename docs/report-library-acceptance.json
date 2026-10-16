@@ -1,0 +1,34 @@
+{
+  "verifiedOn": "2026-10-16",
+  "scope": "Full saved report library; no new provider account or paid request; existing theme preserved.",
+  "checks": {
+    "regressionTests": 104,
+    "typecheck": "passed",
+    "productionBuild": "passed",
+    "workerIntegration": [
+      "Older-than-100 result and all-account label discovery",
+      "Metadata-only response without provider refresh/launch",
+      "Combined exact filters, literal wildcard/SQL-like query text",
+      "Stable 20-item keyset pages, tied timestamps, recent insertion",
+      "Invalid dates/cursors/filters rejected",
+      "Favorites and cross-owner isolation",
+      "Legacy developer-key API contract preserved"
+    ],
+    "isolatedBrowser": [
+      "Actual Workspace and Worker route over disposable D1 with 132 fictional reports",
+      "20 to 40 to 60 to 80 to 100 to 120 to 132 unique cards, then no next page",
+      "Simulated next-page failure retains first 20 cards; retry succeeds",
+      "Historic report found by search + favorite + type + label filters",
+      "Grid mode and filters retained on report return and page reload",
+      "Removing/reapplying a favorite beyond the preview updates filtered results",
+      "No browser console errors observed"
+    ]
+  },
+  "limits": [
+    "Search covers saved report titles, subjects and questions, not full report bodies.",
+    "Metadata is refreshed on explicit refresh/filter/mutation; no continuous cross-page snapshot guarantee.",
+    "Search/view filters persist; loaded page batches restart when the library is reopened or refreshed.",
+    "Read-only developer report-list API retains its legacy latest-100 response.",
+    "Team/requester filtering and shared author collaboration require a separate workspace permission model."
+  ]
+}

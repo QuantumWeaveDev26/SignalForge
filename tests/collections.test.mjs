@@ -31,7 +31,7 @@ before(async()=>{
    b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:args.path==='identity'?`
      let owner;export function setOwner(value){owner=value;}
      export async function getApplicationUser(){return owner?{owner,name:'Fixture',email:'fixture@example.com',authSource:'signalforge'}:null;}`:`
-     const responses=new Map();let fail=false;let hold=false;let terminal='completed';let serial=0;let lastInput='';export function inspection(){return {input:lastInput};}
+     const responses=new Map();let fail=false;let hold=false;let terminal='completed';let serial=0;let lastInput='';export function inspection(){return {input:lastInput,calls:serial};}
      export function control(headers){fail=headers.get('x-fixture-fail')==='true';hold=headers.get('x-fixture-hold')==='true';terminal=headers.get('x-fixture-terminal')||'completed';}
      export function backgroundReady(){return true;}export function config(){return {key:'fixture-only',model:'fixture-model'};}
      export async function provider(url,payload){
@@ -558,4 +558,58 @@ test('Monitoring history paginates tied timestamps safely and rejects malformed 
  assert.equal((await call('/monitors/'+id+'/history?before=broken','GET',undefined,owner)).status,400);
  assert.equal((await call('/monitors/'+id+'/history?before='+encodeURIComponent(JSON.stringify({created:'not-a-date',id:'test'})),'GET',undefined,owner)).status,400);
  assert.equal((await db.prepare('SELECT count(*) AS n FROM reports WHERE owner=?').bind(owner).first()).n,25);
+});
+
+
+let seededLibrary;
+async function libraryFixture(){
+ if(seededLibrary)return seededLibrary;
+ const owner='full-library-owner';
+ const brand=await call('/profiles','POST',{name:'Library QA brand'},owner);
+ const project=await call('/projects','POST',{name:'Library QA project',profileId:brand.value.id},owner);
+ for(let i=0;i<132;i++)await db.prepare('INSERT INTO reports (id,owner,title,template,subject,market,question,input,status,created,updated,favorite,labels,project_id,profile_id,body,response_id,share_token) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind('library-'+String(i).padStart(3,'0'),owner,i===0?'Historic needle beyond 100':i===1?'Literal 100%_ evidence':'Library report '+i,i===0?'competitors':'brand','Evidence '+i,'India','Question '+i,JSON.stringify(inputs),i===131?'in_progress':i===130?'failed':'completed',i===0?'2025-01-01T00:00:00.000Z':'2026-01-01T00:00:00.000Z','2026-01-01T00:00:00.000Z',i===0?1:0,JSON.stringify(i===0?['Archived evidence']:['Recent']),project.value.id,brand.value.id,'PRIVATE REPORT BODY','PRIVATE_PROVIDER_RESPONSE','PRIVATE_SHARE_TOKEN').run();
+ await db.prepare("INSERT INTO reports (id,owner,title,template,subject,market,question,input,status,created,updated,labels) VALUES ('foreign-library','foreign-library-owner','FOREIGN TITLE','brand','FOREIGN SUBJECT','India','Question',?,'completed',?,?,?)").bind(JSON.stringify(inputs),'2026-01-01T00:00:00.000Z','2026-01-01T00:00:00.000Z','["FOREIGN LABEL"]').run();
+ return seededLibrary={owner,brand:brand.value.id,project:project.value.id};
+}
+test('Full report library finds older reports beyond the legacy 100 cap and returns metadata only without provider work',async()=>{
+ const f=await libraryFixture(),before=await(await runtime.dispatchFetch(origin+'/fixture')).json();
+ const legacy=await call('/reports','GET',undefined,f.owner);assert.equal(legacy.value.length,100);assert.ok(!legacy.value.some(r=>r.id==='library-000'));
+ const page=await call('/report-library?q=HISTORIC','GET',undefined,f.owner);assert.equal(page.status,200);assert.equal(page.value.total,1);assert.equal(page.value.items[0].id,'library-000');
+ for(const key of ['body','sources','shareToken','input','response_id','monitorComparison'])assert.equal(page.value.items[0][key],undefined);
+ assert.ok(page.value.labels.includes('Archived evidence'));assert.ok(!page.value.labels.includes('FOREIGN LABEL'));assert.doesNotMatch(JSON.stringify(page.value),/PRIVATE|FOREIGN/);
+ const root=await call('','GET',undefined,f.owner);assert.deepEqual(root.value.reportCounts,{total:132,completed:130});
+ const after=await(await runtime.dispatchFetch(origin+'/fixture')).json();assert.equal(after.calls,before.calls);
+});
+test('Full library combines exact labels, brand, project, type, status, favorite, date and literal text search',async()=>{
+ const f=await libraryFixture(),params=new URLSearchParams({q:'historic',favorite:'true',project:f.project,brand:f.brand,type:'competitors',status:'completed',label:'Archived evidence',since:'2025-01-01'});
+ let result=await call('/report-library?'+params,'GET',undefined,f.owner);assert.equal(result.value.total,1);assert.equal(result.value.items[0].id,'library-000');
+ params.set('since','2025-01-02');assert.equal((await call('/report-library?'+params,'GET',undefined,f.owner)).value.total,0);
+ for(const [key,value]of [['label','Archived'],['project','foreign-project'],['brand','foreign-brand'],['type','trends'],['status','failed']]){params.set('since','2025-01-01');const original=params.get(key);params.set(key,value);assert.equal((await call('/report-library?'+params,'GET',undefined,f.owner)).value.total,0);params.set(key,original);}
+ result=await call('/report-library?'+new URLSearchParams({q:'%_'}),'GET',undefined,f.owner);assert.equal(result.value.total,1);assert.equal(result.value.items[0].id,'library-001');
+ result=await call('/report-library?'+new URLSearchParams({q:"' OR 1=1 --"}),'GET',undefined,f.owner);assert.equal(result.value.total,0);
+});
+test('Full library keyset paging handles tied dates and new inserts without duplicate or skipped old reports',async()=>{
+ const f=await libraryFixture();let page=(await call('/report-library','GET',undefined,f.owner)).value;assert.equal(page.items.length,20);const ids=page.items.map(r=>r.id);let pages=1;
+ await db.prepare("INSERT INTO reports (id,owner,title,template,subject,market,question,input,status,created,updated) VALUES ('library-new',?,'New scan','brand','New','India','Question',?,'completed','2026-10-16T00:00:00.000Z','2026-10-16T00:00:00.000Z')").bind(f.owner,JSON.stringify(inputs)).run();
+ while(page.nextCursor){page=(await call('/report-library?'+new URLSearchParams({before:page.nextCursor}),'GET',undefined,f.owner)).value;ids.push(...page.items.map(r=>r.id));pages++;assert.ok(pages<=7);}
+ assert.equal(pages,7);assert.equal(ids.length,132);assert.equal(new Set(ids).size,132);assert.equal(ids.at(-1),'library-000');assert.ok(!ids.includes('library-new'));
+ assert.equal((await call('/report-library','GET',undefined,f.owner)).value.items[0].id,'library-new');await db.prepare("DELETE FROM reports WHERE id='library-new'").run();
+});
+test('Library cursors reject changed filters, malformed inputs and invalid dates',async()=>{
+ const f=await libraryFixture(),page=(await call('/report-library','GET',undefined,f.owner)).value;
+ assert.equal((await call('/report-library?'+new URLSearchParams({q:'historic',before:page.nextCursor}),'GET',undefined,f.owner)).status,400);
+ for(const params of [{before:'broken'},{before:'x'.repeat(401)},{favorite:'yes'},{type:'fake'},{status:'fake'},{since:'2026-02-30'},{since:'not-date'},{q:'x'.repeat(201)},{project:'../foreign'}])assert.equal((await call('/report-library?'+new URLSearchParams(params),'GET',undefined,f.owner)).status,400);
+});
+test('Library favorite changes apply beyond the initial preview and remain owner scoped',async()=>{
+ const f=await libraryFixture();assert.equal((await call('/reports/library-000','PATCH',{favorite:false},'foreign-library-owner')).status,404);
+ assert.equal((await call('/reports/library-000','PATCH',{favorite:false},f.owner)).status,200);assert.equal((await call('/report-library?favorite=true','GET',undefined,f.owner)).value.total,0);
+ await call('/reports/library-000','PATCH',{favorite:true},f.owner);assert.equal((await call('/report-library?favorite=true','GET',undefined,f.owner)).value.total,1);
+ const foreign=await call('/report-library?'+new URLSearchParams({owner:f.owner}),'GET',undefined,'foreign-library-owner');assert.equal(foreign.value.total,1);assert.equal(foreign.value.items[0].id,'foreign-library');
+ assert.equal((await call('/report-library','GET',undefined,'')).status,401);
+});
+test('Report library endpoint preserves the legacy read-only developer-key contract',async()=>{
+ const f=await libraryFixture(),key=await call('/keys','POST',{name:'Library read contract'},f.owner);
+ const token=key.value.token;assert.ok(token);
+ assert.equal((await call('/report-library','GET',undefined,'',{Authorization:'Bearer '+token})).status,403);
+ const list=await call('/reports','GET',undefined,'',{Authorization:'Bearer '+token});assert.equal(list.status,200);assert.ok(Array.isArray(list.value));assert.equal(list.value.length,100);
 });

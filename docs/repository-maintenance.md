@@ -23,6 +23,6 @@ Environment examples describe variable names only. Configure actual OpenAI, Goog
 
 Keep the current SignalForge theme unless the user explicitly requests a design change. The tracked DESIGN.md describes its visual rules.
 
-## Pending source reconciliation
+## Lockfile portability
 
-The first Linux CI run required two missing optional lock entries beneath @rolldown/binding-wasm32-wasi (@emnapi/core and @emnapi/runtime, both 1.10.0). These additions do not upgrade existing dependencies. Carry this package-lock.json repair into the canonical Sites checkout before the next published-source export, or preserve these two records during synchronization. Do not overwrite the repair with the older deployed lockfile. The current live website was not redeployed for this GitHub-only portability correction.
+The missing optional @emnapi/core@1.10.0 and @emnapi/runtime@1.10.0 lock entries beneath @rolldown/binding-wasm32-wasi were reconciled into canonical Sites source in version18. The repository lockfile now matches that published source. Preserve a complete cross-platform lockfile when changing dependencies and verify clean npm ci in CI.

@@ -109,8 +109,8 @@
         "libraryScreenshot"
       ],
       "status": "partial",
-      "current": "Saved sourced reports with search, favorites, labels, project/brand/type/status/date filters, grid/list views, report organization, Markdown export, browser printing and revocable links.",
-      "gap": "Requester/team filters, author collaboration and pagination beyond the latest 100 reports remain incomplete.",
+      "current": "Saved sourced reports with full-account server-side title/subject/question search and combined favorites, exact labels, project/brand/type/status/date filters. Metadata-only keyset pagination reaches reports beyond the latest-100 workspace preview, including stable tied timestamps. Grid/list views share the same query, with filter/view state retained in the URL across opening reports and reloading. Full account report/completed counts are distinct from bounded overview previews. Existing organization, Markdown export, printing and revocable links are preserved.",
+      "gap": "Requester/team filters and author collaboration remain incomplete. The legacy read-only developer report-list API still returns its existing latest-100 array.",
       "acceptance": [
         "Favorites and labels persist; combined filters produce correct accessible results.",
         "Grid/list views open the same report and preserve filter state."
@@ -273,13 +273,14 @@
     "Expand developer APIs, teams and commercial operations once access and terms are established."
   ],
   "verification": {
-    "releaseScope": "Monitoring scan history, launch-time baseline snapshots and cited comparisons using the frozen theme; full Waldo parity remains incomplete.",
+    "releaseScope": "Full-account report library search, filters, metadata pagination and retained filter/view state using the frozen theme; full Waldo parity remains incomplete.",
     "evidence": [
       "Real saved chat with contextual follow-up and a three-step background workflow were verified in the preceding releases.",
       "Google Cloud Scheduler executed a real monitoring scan with cited saved output; duplicate dispatch produced one report.",
       "Worker API tests exercise actual PDF/DOCX parsers, exact original downloads, file context in provider requests, invalid/scanned inputs, archive/restore and cross-owner isolation.",
       "Worker integration tests verify pitch snapshots, concurrent revision conflicts, restore, owner isolation, duplicate launch suppression, real file context in requests, explicit imports and quota enforcement.",
-      "98 fixture/policy tests pass, including monitor ownership, baseline selection, scope changes, duplicate dispatch, pagination and shared-report isolation. Two real isolated provider scans completed with six and four cited sources; the second retained the first baseline and generated a comparison section."
+      "98 fixture/policy tests pass, including monitor ownership, baseline selection, scope changes, duplicate dispatch, pagination and shared-report isolation. Two real isolated provider scans completed with six and four cited sources; the second retained the first baseline and generated a comparison section.",
+      "104 fixture/policy tests pass; six added Worker integration tests cover an older report beyond 100, combined/literal filters, tied-date pagination/new inserts, input validation, favorites/owner isolation and developer-key compatibility. Isolated actual Workspace browser QA reaches all 132 fictional reports, recovers after a simulated page failure, and preserves filters/view after report navigation and reload."
     ],
     "limits": [
       "Provider-dependent social/ad/audience datasets are not connected.",

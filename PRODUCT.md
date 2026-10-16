@@ -23,6 +23,7 @@ The target is a brand and market intelligence platform covering Waldo's four ser
 - Marketing site (home, Research, Pitch, Monitor, Build, pricing, use cases, sample, contact, privacy, terms) leads into the authenticated workspace.
 - Workspace entry point: conversational research with brand context, saved conversations and cited follow-ups. Also available: overview dashboard, project-linked report composer, projects, reusable Files library, workflow card library and step-by-step runs, report library with favorites/labels/filters, report + chat view, profiles, monitors, data coverage, API keys, settings/usage.
 - Sign-in: Google OAuth and email/password (signup with verification, password reset) via Better Auth; hosted Sites identity in preview.
+- The report library searches all owned saved reports by title, subject and question, combines favorite/project/brand/type/status/exact-label/created-since filters server-side, and loads 20 metadata-only cards per page. Counts cover the full account; filter and grid/list choices survive return from a report and reload through the library URL. The workspace overview remains a latest-100 preview and developer list APIs retain their existing contract.
 - Shared reports are read by people outside the workspace via revocable links; reports export to Markdown and print.
 
 ## Capabilities and Constraints

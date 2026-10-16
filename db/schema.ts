@@ -20,7 +20,7 @@ export const reports = sqliteTable('reports', {
   workflowRunId: text('workflow_run_id').references(() => workflowRuns.id, { onDelete: 'set null' }),
   workflowStep: integer('workflow_step'),
   favorite: integer('favorite').notNull().default(0), labels: text('labels').notNull().default('[]'),
-}, t => [uniqueIndex('reports_monitor_occurrence_idx').on(t.owner,t.monitorId,t.monitorDue)]);
+}, t => [uniqueIndex('reports_monitor_occurrence_idx').on(t.owner,t.monitorId,t.monitorDue),index('reports_library_order_idx').on(t.owner,t.created,t.id)]);
 export const projects = sqliteTable('projects', {
   id: text('id').primaryKey(), owner: text('owner').notNull(), name: text('name').notNull(),
   description: text('description').notNull().default(''),

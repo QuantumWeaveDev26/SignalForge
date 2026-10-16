@@ -1,0 +1,36 @@
+'use client';
+import {useEffect,useRef,useState} from 'react';
+import {Plus,Star,RefreshCw} from 'lucide-react';
+import {templates} from '@/lib/research';
+import {emptyReportFilters,type ReportFilters} from '@/lib/collection-policy';
+const names={query:'q',favorite:'favorite',projectId:'project',profileId:'brand',template:'type',status:'status',label:'label',since:'since'};
+function initialFilters(){const p=new URLSearchParams(typeof window==='undefined'?'':location.search);return {...emptyReportFilters,...Object.fromEntries(Object.entries(names).map(([key,name])=>[key,key==='favorite'?p.get(name)==='true':p.get(name)||'']))} as ReportFilters;}
+function search(filters:ReportFilters){const p=new URLSearchParams();for(const [key,name]of Object.entries(names)){const value=filters[key as keyof ReportFilters];if(value)p.set(name,String(value));}return p.toString();}
+const stateLabel=(value:string)=>({in_progress:'Researching',completed:'Ready',incomplete:'Partial',failed:'Needs attention',cancelled:'Stopped'}[value]||value);
+export default function ReportLibrary({data,busy,act,api,load,go,onNew,onSearchChange}:any){
+ const[filters,setFilters]=useState(initialFilters),[grid,setGrid]=useState(()=>typeof window!=='undefined'&&new URLSearchParams(location.search).get('view')==='grid');
+ const[page,setPage]=useState<any>(null),[loading,setLoading]=useState(true),[more,setMore]=useState(false),[error,setError]=useState(''),[moreError,setMoreError]=useState(''),[reload,setReload]=useState(0);
+ const generation=useRef(0),moreLock=useRef(false),query=search(filters);
+ useEffect(()=>{const params=new URLSearchParams(query);if(grid)params.set('view','grid');const value=params.size?'?'+params:'';onSearchChange(value);history.replaceState(history.state,'',location.pathname+value);},[query,grid,onSearchChange]);
+ useEffect(()=>{let active=true;const version=++generation.current;setLoading(true);setPage(null);setError('');setMoreError('');setMore(false);moreLock.current=false;
+  const timer=setTimeout(()=>{api('report-library?'+query).then((value:any)=>{if(active&&generation.current===version)setPage(value);}).catch((e:any)=>{if(active&&generation.current===version)setError(e.message);}).finally(()=>{if(active&&generation.current===version)setLoading(false);});},200);
+  return()=>{active=false;clearTimeout(timer);};
+ },[api,query,reload,data.reports]);
+ const change=(key:keyof ReportFilters,value:any)=>setFilters(old=>({...old,[key]:value}));
+ async function earlier(){if(!page?.nextCursor||moreLock.current)return;moreLock.current=true;setMore(true);setMoreError('');const version=generation.current;
+  try{const value=await api('report-library?'+query+'&'+new URLSearchParams({before:page.nextCursor}));if(generation.current===version)setPage((old:any)=>({...value,items:[...new Map([...old.items,...value.items].map((r:any)=>[r.id,r])).values()]}));}
+  catch(e){if(generation.current===version)setMoreError((e as Error).message);}
+  finally{if(generation.current===version){setMore(false);moreLock.current=false;}}
+ }
+ const reports=page?.items||[],labels=page?.labels||[];
+ return <>
+  <div className="toolbar"><div className="search-input"><input aria-label="Search reports" placeholder="Search reports by title, subject or question" maxLength={200} value={filters.query} onChange={e=>change('query',e.target.value)}/></div><div><button className="text-link" disabled={busy||loading} onClick={()=>act(load)}><RefreshCw size={16}/>Refresh reports</button><button className="button button-dark" onClick={onNew}><Plus size={16}/>New research</button></div></div>
+  <div className="panel collection-filters"><label className="checkbox-label"><input type="checkbox" checked={filters.favorite} onChange={e=>change('favorite',e.target.checked)}/>Favorites</label><label>Project<select value={filters.projectId} onChange={e=>change('projectId',e.target.value)}><option value="">All projects</option>{data.projects.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label>Brand<select value={filters.profileId} onChange={e=>change('profileId',e.target.value)}><option value="">All brands</option>{data.profiles.map((p:any)=><option key={p.id} value={p.id}>{p.name}</option>)}</select></label><label>Type<select value={filters.template} onChange={e=>change('template',e.target.value)}><option value="">All types</option>{templates.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label><label>Status<select value={filters.status} onChange={e=>change('status',e.target.value)}><option value="">All statuses</option>{['starting','queued','in_progress','completed','incomplete','failed','cancelled'].map(s=><option key={s} value={s}>{stateLabel(s)}</option>)}</select></label><label>Label<select value={filters.label} onChange={e=>change('label',e.target.value)}><option value="">All labels</option>{filters.label&&!labels.includes(filters.label)&&<option value={filters.label}>{filters.label}</option>}{labels.map((l:string)=><option key={l}>{l}</option>)}</select></label><label>Created since<input type="date" value={filters.since} onChange={e=>change('since',e.target.value)}/></label><button className="text-link" onClick={()=>setFilters({...emptyReportFilters})}>Clear filters</button><button className="button button-outline small" aria-pressed={grid} onClick={()=>setGrid(!grid)}>{grid?'List view':'Grid view'}</button></div>
+  <p className="muted" role="status" aria-live="polite">{loading?'Searching your full report library…':page?`Showing ${reports.length} of ${page.total} matching reports · searching your full saved library.`:'Reports could not be loaded.'}</p>
+  {error&&<div className="alert" role="alert">{error}<button className="text-link" onClick={()=>setReload(n=>n+1)}>Retry report search</button></div>}
+  {!loading&&!error&&reports.length>0&&<div aria-label="Matching reports" className={grid?'collection-grid':'collection-report-list'}>{reports.map((r:any)=><article className="panel collection-report" key={r.id}><button className="collection-report-open" onClick={()=>go('reports',r.id)}><strong>{r.title}</strong><span>{r.market} · {new Date(r.created).toLocaleDateString()} · {stateLabel(r.status)}</span><p>{r.question}</p></button><footer><span>{r.labels.join(' · ')||'No labels'}</span><button className="icon-button" aria-label={(r.favorite?'Remove favorite: ':'Favorite: ')+r.title} aria-pressed={r.favorite} disabled={busy} onClick={()=>act(async()=>{await api('reports/'+r.id,'PATCH',{favorite:!r.favorite});await load();})}><Star size={18} fill={r.favorite?'currentColor':'none'}/></button></footer></article>)}</div>}
+  {!loading&&!error&&page&&!reports.length&&<div className="empty-state"><h3>{data.reportCounts?.total?'No reports match these filters.':'Your research will appear here.'}</h3><p>{data.reportCounts?.total?'Try clearing a filter.':'Start a research brief or run a saved workflow.'}</p></div>}
+  {moreError&&<p className="alert" role="alert">{moreError} Your loaded reports are still available. Try loading earlier reports again.</p>}
+  {!loading&&page?.nextCursor&&<button className="button button-outline" disabled={more||busy} onClick={earlier}>{more?'Loading earlier reports…':'Load earlier reports'}</button>}
+ </>;
+}

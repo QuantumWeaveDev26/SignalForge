@@ -1,0 +1,1 @@
+CREATE INDEX `reports_library_order_idx` ON `reports` (`owner`,`created`,`id`);

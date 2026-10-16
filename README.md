@@ -9,7 +9,7 @@ SignalForge is a business research and strategy workspace with an original visua
 - Public marketing pages and direct Google or verified email/password accounts; password resets and revocable sessions.
 - Saved research conversations, follow-up questions, brand/persona/project context, web research and source-linked reports.
 - Editable research workflows with background execution, saved step outputs, retries and signed provider-webhook completion.
-- Projects, brands/topics, report search/filtering/favorites/labels, Markdown downloads and revocable report sharing.
+- Projects, brands/topics and a complete saved-report library: search, combined filters, favorites and labels across all saved reports, with pagination, reliable retry, grid/list views and remembered filters. Markdown downloads and revocable report sharing are supported.
 - A Files library for PDF, DOCX, TXT, CSV and Markdown: extracted-text previews, original downloads, project/brand organization, archive/restore and reuse in research. File limits and OCR limitations are disclosed in the product.
 - Saved client/RFP briefs, reusable agency credentials, cited pitch research, editable playbooks, revision history/restore and Markdown exports.
 - Daily/weekly/monthly monitoring rules, report history and an authenticated hourly Google Cloud dispatcher that respects each rule's own cadence. Repeat briefings can be compared with the prior completed scan, with source differences, an AI change summary and duplicate-dispatch protection.

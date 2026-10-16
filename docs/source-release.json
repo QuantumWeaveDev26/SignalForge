@@ -1,39 +1,32 @@
 {
   "site_url": "https://signalforge-research-nr.brandmintai.chatgpt.site",
   "sites_project_id": "appgprj_6acf5cb489c08191a409ea6fa27858a1",
-  "sites_source_commit": "3d046a6c5ce06ae900340b3384a25a6ce9814668",
-  "source_export": "git archive of tracked files at the exact published Sites commit",
+  "sites_source_commit": "e0ea9c103350af7bbbba87326993eacb0784646c",
+  "source_export": "git archive with Windows newline conversion disabled; tracked application blobs and modes checked against exact published Sites commit",
   "synchronized_date": "2026-10-16",
-  "published_version": 17,
+  "published_version": 18,
   "excluded_tracked_files": [
     "tsconfig.tsbuildinfo"
   ],
   "maintenance_only_differences": {
     "modified": [
       "README.md",
-      ".gitignore",
-      "package-lock.json"
+      ".gitignore"
     ],
     "added": [
       ".github/workflows/ci.yml",
       "docs/repository-maintenance.md",
       "docs/source-release.json"
     ],
-    "lockfile_repair": "Added only missing optional @emnapi/core@1.10.0 and @emnapi/runtime@1.10.0 entries beneath @rolldown/binding-wasm32-wasi for Linux npm ci validation; no existing package versions changed.",
-    "reconciliation_required": "Carry the two optional package-lock records into canonical Sites source before the next release export, or preserve them during synchronization. No live redeploy was performed for this GitHub-only portability fix."
+    "lockfile_reconciliation": "Completed in canonical Sites version18; package-lock.json matches published source, with no GitHub-only dependency overrides."
   },
   "verification": {
-    "fixture_policy_tests": 98,
+    "fixture_policy_tests": 104,
     "typecheck": "passed",
     "production_build": "passed",
-    "live_ai_monitoring_comparison": "two isolated scans passed; 6 and 4 sources; baseline matched; duplicate dispatch produced no extra report",
-    "live_site_browser_qa": "passed on version17: monitoring history navigation/refresh, briefing, legacy no-baseline state, return-to-history, Markdown download with sources/limits, no console errors",
-    "github_clean_checkout": {
-      "npm_ci": "passed",
-      "typecheck": "passed",
-      "fixture_policy_tests": 98,
-      "production_build": "passed",
-      "production_credentials_used": false
-    }
+    "browser_qa_local": "132 fictional reports traversed without duplicate IDs; injected page failure recovery; old-report combined filters; grid/filter return and reload; favorites; overview count caption corrected",
+    "live_site_browser_qa": "passed on version18: 10-of-10 counts; combined search/type/status finds expected report; favorites filter and restoration; report-return/reload preserves grid and filters; clear/refresh restores all10; no console errors",
+    "theme": "preserved; no theme CSS changes",
+    "github_actions": "must pass on exact pushed release commit; see repository Actions history"
   }
 }
