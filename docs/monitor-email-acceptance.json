@@ -1,0 +1,29 @@
+{
+  "scope": "Opt-in monitoring email notifications using the existing Gmail send-only mailbox and hourly dispatcher",
+  "reviewedOn": "2026-10-17",
+  "implemented": [
+    "Verified application account recipient only, including explicitly linked preview workspaces; no client-chosen recipient",
+    "Completed, partial and failed monitored reports; quota/configuration launch failures without a report notify once per due occurrence",
+    "Durable D1 outbox with unique report/event identity, concurrent claims, explicit rejection retries and saved Gmail receipts",
+    "Opt-out suppresses pending mail; changed verification/recipient suppresses queued mail; no historical backfill on opt-in",
+    "Test email with 30-minute per-owner limit; sender authorization check and latest 20 private delivery statuses",
+    "OAuth Testing expiry warning; authorization errors block and resume after operator reconnect",
+    "Interrupted/ambiguous sends and lost receipts require explicit duplicate-risk acknowledgement before manual retry",
+    "Shared transport for verification/reset emails with bounded safe pre-send retries and redacted health telemetry"
+  ],
+  "validation": {
+    "fullSuite": "136 tests passed",
+    "typecheck": "Passed before final documentation update",
+    "realGmail": "One test email accepted by Gmail from an isolated Worker/D1 using existing sender credentials; no production data or research usage changed",
+    "inboxReceipt": "Operator confirmed the real test message arrived in the inbox on 17 October 2026; no inbox-read scope was used",
+    "browser": "Interactive browser tool is unavailable in this turn; no claim of live authenticated UI walkthrough"
+  },
+  "limits": [
+    "Google OAuth remains Testing by explicit operator request; Gmail refresh consent can expire after seven days. This release cannot provide indefinite unattended delivery.",
+    "Gmail receipt means accepted by Gmail, not a deliverability guarantee or inbox receipt.",
+    "Hourly dispatch and backlog can delay mail; individual messages retry at most eight send attempts and expire after seven days. Blocked authorization checks do not consume send attempts.",
+    "No report body, source contents, uploads, public-share tokens or verification/reset links in monitoring emails.",
+    "No new sender account/provider, paid service, timezone change, theme change or customer-wide automatic opt-in."
+  ],
+  "rollback": "Revert Worker source to v21 while retaining the three additive tables. No old tables or auth settings are changed; disable notification settings before rollback if needed."
+}

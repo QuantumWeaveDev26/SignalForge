@@ -155,6 +155,21 @@ export const workspaceAccounts = sqliteTable('workspace_accounts', {
 });
 
 // Durable delivery receipts; retries never authorize a second workflow step.
+export const monitorEmailSettings=sqliteTable('monitor_email_settings',{
+ owner:text('owner').primaryKey(),userId:text('user_id').notNull().references(()=>authUser.id),
+ enabled:integer('enabled').notNull().default(0),enabledAt:text('enabled_at').notNull(),
+ testAt:text('test_at'),updated:text('updated').notNull(),
+});
+export const monitorEmailOutbox=sqliteTable('monitor_email_outbox',{
+ id:text('id').primaryKey(),owner:text('owner').notNull(),userId:text('user_id').notNull(),recipient:text('recipient').notNull(),
+ reportId:text('report_id'),monitorId:text('monitor_id'),kind:text('kind').notNull(),title:text('title').notNull(),
+ state:text('state').notNull().default('pending'),attempts:integer('attempts').notNull().default(0),nextAttempt:text('next_attempt').notNull(),leaseUntil:text('lease_until'),
+ providerId:text('provider_id'),error:text('error').notNull().default(''),created:text('created').notNull(),updated:text('updated').notNull(),
+},t=>[uniqueIndex('monitor_email_report_idx').on(t.reportId),index('monitor_email_due_idx').on(t.state,t.nextAttempt),index('monitor_email_owner_idx').on(t.owner,t.created)]);
+export const mailDeliveryHealth=sqliteTable('mail_delivery_health',{
+ id:text('id').primaryKey(),state:text('state').notNull(),error:text('error').notNull().default(''),checked:text('checked').notNull(),
+});
+
 export const backgroundEvents = sqliteTable('background_events', {
  id:text('id').primaryKey(), responseId:text('response_id').notNull(), type:text('type').notNull(),
  state:text('state').notNull().default('pending'), leaseUntil:text('lease_until'),

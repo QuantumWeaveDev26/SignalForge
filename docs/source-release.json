@@ -1,10 +1,10 @@
 {
   "site_url": "https://signalforge-research-nr.brandmintai.chatgpt.site",
   "sites_project_id": "appgprj_6acf5cb489c08191a409ea6fa27858a1",
-  "sites_source_commit": "3648eda09049819e4b45258ccfa1694790a953bc",
+  "sites_source_commit": "0fb7ecadfed759016ff6f02445ec381b81d3613a",
   "source_export": "git archive with Windows newline conversion disabled; tracked application blobs and modes checked against exact published Sites commit",
-  "synchronized_date": "2026-10-16",
-  "published_version": 21,
+  "synchronized_date": "2026-10-17",
+  "published_version": 22,
   "excluded_tracked_files": [
     "tsconfig.tsbuildinfo"
   ],
@@ -21,15 +21,18 @@
     "lockfile_reconciliation": "Completed in canonical Sites version18; package-lock.json matches published source, with no GitHub-only dependency overrides."
   },
   "verification": {
-    "fixture_policy_tests": 120,
+    "fixture_policy_tests": 136,
+    "final_hardened_transport_tests": 4,
     "typecheck": "passed",
-    "production_build": "passed",
-    "demo_pack_checks": "authenticated CSRF-protected fixed-pack save; deterministic owner-scoped IDs; atomic related records; paused rule; retry preserves edits; no provider/payment ledger calls; prepared origin excludes only this internal sample from provider-run allowance and real limit still rejects ninth run",
-    "live_site_browser_qa": "signed-in user clicked Save prepared demo; success notice and report count 10 to 11 observed; read-only hosted database confirmed owner-scoped completed prepared report with four sources and providerCalls0, pitch revision1 and initial version, related brand/project and disabled managed rule",
-    "theme_schema_provider_changes": "none",
-    "sample_provenance": "fixed prepared illustrative content, fictional labels, public sources reviewed 2026-10-16; never presented as a live AI run",
+    "production_build_and_package_build": "passed",
+    "deployment": "Sites version22 succeeded; public URL and environment revision9 unchanged",
+    "email_acceptance": "one real test message accepted by Gmail from isolated Worker/D1 using existing sender authorization; operator confirmed inbox receipt; no inbox-read scope, production data changes or research calls",
+    "live_site_browser_qa": "not performed: interactive browser runtime unavailable this turn; no authenticated production UI claim",
+    "oauth_testing": "explicitly retained; visible seven-day expiry warning and operator reconnect remain necessary; no indefinite delivery guarantee",
+    "privacy": "no private recipient, owner, mail or record identifiers included in release proof; status-only notifications exclude report bodies, uploads and private tokens",
+    "theme_and_auth": "current theme/CSS, existing login/secrets/scheduler preserved; additive migration0015",
     "github_actions": "must pass on exact pushed release commit; see repository Actions history",
-    "deployment": "Sites version21 succeeded; public URL and environment revision9 unchanged",
-    "browser_qa_limit": "full postreload UI check incomplete because concurrent user browser interaction interrupted navigation; hosted persistence was independently verified without exposing owner/demo record IDs"
+    "hosted_schema": "read-only live database overview confirmed the three additive email delivery/settings/outbox tables",
+    "postdeploy_http_limit": "direct local HTTP smoke timed out; no successful postdeploy API/browser walkthrough claimed"
   }
 }

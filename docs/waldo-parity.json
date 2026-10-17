@@ -1,5 +1,5 @@
 {
-  "reviewedOn": "2026-10-16",
+  "reviewedOn": "2026-10-17",
   "purpose": "Engineering acceptance map for functional equivalence; this file does not activate features or certify provider coverage.",
   "constraints": {
     "theme": "Preserve the current deployed SignalForge theme.",
@@ -214,8 +214,8 @@
         "projectsScreenshot"
       ],
       "status": "partial",
-      "current": "Active hourly Google Cloud Scheduler in local-snow-508108-g3 calls the authenticated OIDC monitoring dispatcher. Daily/weekly/monthly rules, duplicate guards, retries and saved report history exist. A real Google-triggered QA report completed with four citations and one report after duplicate dispatch. QA rules are paused; all saved brands are configured for weekly India briefings, with no real business brands yet saved. Owner-scoped scan history paginates beyond 100 reports. New scans snapshot the earlier completed same-rule report at launch; comparable scopes receive a cited changes section within the existing provider call. Report detail compares normalized source URLs, links the earlier briefing and exports the comparison with the current report and citations. First/legacy/unfinished/changed-scope states are explicit; private baseline metadata is omitted from shared reports.",
-      "gap": "Opt-in notification delivery, branded exports, user-timezone scheduling and specialist dataset coverage. Legacy reports are not retroactively assigned a baseline.",
+      "current": "Active hourly Google Cloud Scheduler in local-snow-508108-g3 calls the authenticated OIDC monitoring dispatcher. Daily/weekly/monthly rules, duplicate guards, retries and saved report history exist. A real Google-triggered QA report completed with four citations and one report after duplicate dispatch. QA rules are paused; all saved brands are configured for weekly India briefings, with no real business brands yet saved. Owner-scoped scan history paginates beyond 100 reports. New scans snapshot the earlier completed same-rule report at launch; comparable scopes receive a cited changes section within the existing provider call. Report detail compares normalized source URLs, links the earlier briefing and exports the comparison with the current report and citations. First/legacy/unfinished/changed-scope states are explicit; private baseline metadata is omitted from shared reports. Opt-in verified-account Gmail notifications now use a durable outbox on the hourly dispatcher, including completion, partial results, failures and prelaunch refusals. Test email, health checks, receipts, rejection retries and duplicate-risk manual recovery are visible in Monitoring.",
+      "gap": "Production-grade sender authorization/deliverability: the operator explicitly retained Gmail OAuth Testing and its potential seven-day refresh-token expiry. Branded exports, user-timezone scheduling and specialist dataset coverage remain pending. Legacy reports are not retroactively assigned a baseline.",
       "dependencies": [
         "Verified scheduler, monitored execution, delivery mechanism and appropriate connected datasets."
       ],

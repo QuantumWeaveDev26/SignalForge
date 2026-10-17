@@ -38,7 +38,7 @@
     "retries": "A unique owner/monitor/due reservation prevents repeated paid launches after lost acknowledgements or expired leases. An unknown provider launch outcome is retained as a failed/interrupted report rather than relaunched automatically. Quota/pre-reservation failures back off one hour.",
     "cadence": "First scan due immediately. Preserve the UTC cadence anchor, skip missed periods, clamp short months and restore the original month-day later. Runner interval can delay starts by up to one hour plus retries.",
     "completion": "Existing signed OpenAI background webhooks persist completed reports. The scheduler also refreshes pending reports as a fallback; refresh failures return HTTP 503 for retry.",
-    "notifications": "Results and errors appear in the workspace. Monitoring does not send email or access connected social/ad/panel providers."
+    "notifications": "Opt-in emails to verified SignalForge accounts, including explicitly linked preview workspaces. The existing hourly dispatcher queues new monitored report outcomes and launch refusals, delivers private links, and retries explicit rejections. Ambiguous sends never automatically duplicate. Sender authorization remains Google Testing and can expire after seven days. See monitor-email-acceptance.json."
   },
   "validation": {
     "automatedChecks": 83,

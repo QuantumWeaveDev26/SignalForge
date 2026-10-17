@@ -17,6 +17,7 @@ declare namespace Cloudflare {
     GOOGLE_CLIENT_ID?: string;
     GOOGLE_CLIENT_SECRET?: string;
     GMAIL_REFRESH_TOKEN?: string;
+    GMAIL_OAUTH_STATUS?: string;
     AUTH_EMAIL_FROM?: string;
     BILLING_MODE?: string;
     RAZORPAY_KEY_ID?: string;

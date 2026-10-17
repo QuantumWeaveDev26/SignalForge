@@ -13,6 +13,7 @@ import {monitorHistory} from '@/lib/monitor-history';
 import {reportLibrary} from '@/lib/report-library';
 import {saveProfile,brandWorkspace} from '@/lib/brand-workspace';
 import {saveManagerDemo} from '@/lib/manager-demo';
+import {monitorEmailState,setMonitorEmail,sendMonitorEmailTest,retryMonitorEmail,checkMailHealth} from '@/lib/monitor-email';
 export const dynamic='force-dynamic';
 function json(data:unknown,status=200){return Response.json(data,{status,headers:{'Cache-Control':'no-store'}});}
 async function body(req:Request,limit=60000){if(Number(req.headers.get('content-length')||0)>limit)throw new AppError('Request is too large.',413);const text=await req.text();if(text.length>limit)throw new AppError('Request is too large.',413);try{const value=JSON.parse(text);if(!value||typeof value!=='object'||Array.isArray(value))throw new Error();return value;}catch{throw new AppError('Invalid request body.');}}
@@ -21,6 +22,13 @@ async function handle(req:Request){
     const method=req.method;const mutation=method!=='GET';const who=await identity(req,mutation);const owner=who.owner;
     const parts=new URL(req.url).pathname.replace(/^\/api\/workspace\/?/,'').split('/').filter(Boolean);const [area,record,action]=parts;
     if(who.api&&!['reports','profiles'].includes(area))throw new AppError('This API key can only read reports and profiles.',403);
+    if(area==='monitor-email'){
+      if(method==='GET'&&!record)return json(await monitorEmailState(who));
+      if(method==='POST'&&!record){const value=await body(req,256);if(Object.keys(value).some(k=>k!=='enabled'))throw new AppError('Only the email enabled setting can be changed.');return json(await setMonitorEmail(who,value.enabled));}
+      if(method==='POST'&&record==='test'){const value=await body(req,256);if(Object.keys(value).length)throw new AppError('Test delivery uses your verified account address.');return json(await sendMonitorEmailTest(who));}
+      if(method==='POST'&&record==='check'){const state=await monitorEmailState(who);if(!state.sender.checked||Date.now()-Date.parse(state.sender.checked)>60000)await checkMailHealth();return json(await monitorEmailState(who));}
+      if(method==='POST'&&record&&action==='retry'){const value=await body(req,256);return json(await retryMonitorEmail(who,record,value.acknowledgeDuplicateRisk));}
+    }
     if(area==='demo-pack'&&method==='POST'&&!record){const value=await body(req,256);if(value.pack!=='coffee-launch-v1'||Object.keys(value).some(k=>k!=='pack'))throw new AppError('Choose the prepared coffee launch demo.');return json(await saveManagerDemo(owner));}
     if(area==='report-library'&&method==='GET'&&!record)return json(await reportLibrary(owner,new URL(req.url).searchParams));
     if(!area&&method==='GET'){

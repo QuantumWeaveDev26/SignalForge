@@ -37,3 +37,23 @@ Until activation, old sign-in continues to work. To roll back, set `AUTH_ENABLED
 ## Verification
 
 `node --experimental-strip-types --test tests/auth.test.mjs` exercises the actual Better Auth handler with a local D1 binding and the production Drizzle schema: hashed signup, blocked unverified sessions, verification cookies, forged sessions, Google redirect/state/PKCE, password reset/revocation, additive ownership preservation, and the Gmail transport with fake HTTP responses. Real Google consent and mailbox delivery require the operator's configured credentials and are separate activation checks.
+
+## Monitoring emails and sender recovery (17 October 2026)
+
+Monitoring now has an opt-in Email notifications panel. It uses the signed-in verified account email, never an address from the request body. Explicitly linked preview workspaces are checked against their account link on each delivery. Enabling notifications covers scans launched afterward; it does not backfill old reports. Account verification/reset emails continue through the same Gmail sender.
+
+The existing hourly monitoring dispatcher discovers completed, partial and failed scans and scan-launch refusals. It saves each event in the additive D1 outbox before sending. The outbox records pending/retry/blocked/sending/accepted/uncertain/failed/suppressed states; the stored success state is called sent and the UI labels it Accepted by Gmail. Gmail acceptance is not proof of inbox receipt. Monitoring emails contain a private sign-in link, title and outcome, with no report body or attachments. Disabling notifications suppresses unsent queued messages.
+
+Token refresh/identity reads retry bounded temporary failures. Explicit rate-limit rejections retry with backoff/Retry-After through the hourly dispatcher. At most eight send attempts and seven days of message retention are allowed; authorization blocks do not consume send attempts. A process interruption after starting send, a network timeout, a Gmail 5xx or a missing success receipt is uncertain because Gmail offers no exactly-once send contract here. These messages are not automatically resent. After checking the inbox and spam folder, the owner can explicitly acknowledge duplicate risk and retry.
+
+The operator explicitly chose to keep Google OAuth in Testing on 17 October 2026. This cannot provide permanent unattended sender authorization: Gmail-scoped refresh consent can expire after seven days. The UI always discloses Testing unless GMAIL_OAUTH_STATUS=production has been configured after an actual Google status change. That flag is a disclosure, not a way to change Google's consent state.
+
+When Gmail authorization is blocked:
+1. Run the existing local node scripts/connect-gmail.mjs wizard and authorize the configured sender yourself. Never paste its refresh token into chat.
+2. Replace only the hosted GMAIL_REFRESH_TOKEN secret through Sites environment settings, then redeploy a saved version. Keep the existing login client and session secret.
+3. Choose Check sender in Monitoring. Eligible blocked messages automatically retry after their saved backoff, while expired messages require a fresh future event.
+4. Use Send me a test email and check both inbox and spam. Tests are limited to one per owner every 30 minutes.
+
+For repeatable operator acceptance, node scripts/verify-mail-live.mjs --send sends exactly one test message to the configured sender through an isolated actual Worker/D1 and the real Gmail transport. The ignored proof file reserves the attempt before sending so reruns do not send duplicates. It does not read the inbox, launch research or change production records. Tests under tests/*.test.mjs never use real credentials or send external email.
+
+References: https://developers.google.com/identity/protocols/oauth2/ and https://developers.google.com/workspace/gmail/api/guides/handle-errors .
