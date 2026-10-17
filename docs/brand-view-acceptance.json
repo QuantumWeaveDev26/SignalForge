@@ -1,0 +1,34 @@
+{
+  "scope": "Persistent owner-scoped brand view across workspace lists and new-work defaults",
+  "reviewedOn": "2026-10-17",
+  "behavior": [
+    "Sidebar Brand view stores a selected owned brand or All brands in D1 preferences. Existing accounts default to All brands.",
+    "Saved preference follows the account; explicit brand URL parameters and legacy brand/project entry links override the default without rewriting it.",
+    "Chats/history, full report library, projects, workflow catalog/runs, files, pitches, monitoring rules and overview previews respect explicit brand associations.",
+    "New research, pristine chat, new project/workflow/pitch/manual-monitor forms and new context uploads receive current/captured brand defaults.",
+    "Open drafts and saved record details retain their original context when the list view changes. Saved report/chat/workflow/pitch inputs are not globally rewritten.",
+    "Brand directory, reusable agency credentials, billing, developer access, settings and the all-brands monitoring toggle remain account-wide.",
+    "Older unassociated items remain in All brands; matching names never create associations. Selected-brand overview counts cover all saved reports while previews retain existing latest-100 bounds.",
+    "Deleting a selected brand clears its nullable preference. Manual rules retain context/pause state and detach the deleted profile association."
+  ],
+  "validation": {
+    "fullSuite": "156 tests passed; zero failed/skipped",
+    "workerAPI": "Actual Worker/D1 checks cover persistence/isolation, invalid/foreign IDs, CSRF/unauthenticated/developer writes, settings and snapshot preservation, deletion and manual monitor associations",
+    "dom": "11 actual Workspace/child-component tests in Happy DOM with fixture HTTP and unrelated session-control stub: cross-page filters, reload, Back/URL scope, unknown IDs, full counts, direct record views, draft preservation and failed-save recovery",
+    "policy": "Same-name identity separation, all-list scopes, preserved full counts, new-work context copying and URL/grid/All-brands state",
+    "typecheck": "Passed",
+    "productionBuild": "Passed",
+    "liveBrowser": "No authenticated Edge/browser walkthrough claimed; DOM tests do not establish pixel layout.",
+    "cleanInstall": "Passed isolated npm 11.19.0 Linux x64 npm ci dry-run, without node_modules; restored two pre-existing optional WASM lock records removed by the Windows test-dependency install."
+  },
+  "migration": "0016 adds one nullable reference to preferences. Generated ADD COLUMN SQL was corrected before publication to retain ON DELETE SET NULL from the schema.",
+  "theme": "Existing styles only; no CSS changes",
+  "providerCalls": 0,
+  "limits": [
+    "A brand view is a filter/default, not a team permission boundary.",
+    "Explicit URL scope overrides the stored default. Other open tabs/devices update on reload, not realtime sync.",
+    "Existing drafts keep their context, so their explicit brand can differ from the current list filter.",
+    "Unassociated legacy items need explicit organization before appearing in a brand view."
+  ],
+  "rollback": "Revert source to v22 while retaining the nullable column and saved preference. V22 settings updates preserve this additional column."
+}

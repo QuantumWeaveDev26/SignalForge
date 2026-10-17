@@ -71,3 +71,7 @@ The export supports the product Markdown subset, headings, emphasis, bullet/numb
 ## Prepared manager demo
 
 Overview can save a fixed fictional coffee launch pack for the signed-in owner. The brand/project, sourced prepared report, editable pitch and initial revision, and paused weekly monitoring rule are saved atomically. Prepared content states its origin and source review date; it is not presented as a new model run. Repeated saves reuse the same records without overwriting edits. No provider calls, new billing charges or public share links are created. Real research and follow-ups retain their normal usage limits.
+
+## Persistent brand view
+
+The sidebar saves an owned selected brand or All brands to workspace preferences. Chats/history, report library, projects, workflows/runs, files, pitches, monitoring and overview previews use explicit brand IDs. New work receives brand defaults; open drafts and saved records retain context. Report counts cover the full account/selected brand while overview previews retain existing latest-100 bounds. Explicit URL scope overrides the stored default without silently rewriting it. Older unassociated items appear in All brands; equal names do not establish an association. The brand directory and account controls remain global. Deleting a selected brand clears its nullable preference and detaches manual monitoring associations without changing captured context or pause state.

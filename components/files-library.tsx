@@ -1,10 +1,12 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
 import {FileText,Upload,Download,Archive,RotateCcw,X} from 'lucide-react';
+import {useBrandView} from './brand-view-context';
 
 export default function FilesLibrary({data,api,load,act,busy,initialProject='',initialBrand=''}:any){
- const[files,setFiles]=useState<any[]>(data.attachments),[query,setQuery]=useState(''),[project,setProject]=useState(initialProject),[brand,setBrand]=useState(initialBrand),[archived,setArchived]=useState(false),[preview,setPreview]=useState<any>(null),[draft,setDraft]=useState<any>(null);
+ const[files,setFiles]=useState<any[]>(data.attachments),[query,setQuery]=useState(''),[project,setProject]=useState(initialProject),[localBrand,setLocalBrand]=useState(initialBrand),[archived,setArchived]=useState(false),[preview,setPreview]=useState<any>(null),[draft,setDraft]=useState<any>(null);
  useEffect(()=>{if(!archived)setFiles(data.attachments);},[data.attachments,archived]);
+ const brandView=useBrandView(),brand=brandView?.brandId??localBrand,setBrand=brandView?.select??setLocalBrand;
  async function refresh(){const values=await api('attachments?archived=true');setFiles(values);await load();setFiles(values);}
  useEffect(()=>{if(archived)act(async()=>{setFiles(await api('attachments?archived=true'));});else setFiles(data.attachments);},[archived]);
  const visible=useMemo(()=>files.filter((f:any)=>!!f.archived===archived&&(!query||f.name.toLowerCase().includes(query.toLowerCase()))&&(!project||f.project_id===project)&&(!brand||f.profile_id===brand)),[files,query,project,brand,archived]);

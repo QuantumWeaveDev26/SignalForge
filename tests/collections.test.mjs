@@ -725,3 +725,51 @@ test('A prepared demo is not charged as a provider report and does not reduce or
  assert.equal((await call('/reports','POST',inputs,owner)).status,429);
  assert.equal((await db.prepare('SELECT count(*) AS n FROM reports WHERE owner=?').bind(owner).first()).n,9);
 });
+
+test('Brand view persists per owner while ordinary settings saves preserve it and existing snapshots',async()=>{
+ const owner='persistent-brand-view';
+ const a=(await call('/profiles','POST',{name:'Same name',market:'India',context:'A context'},owner)).value,b=(await call('/profiles','POST',{name:'Same name',market:'US',context:'B context'},owner)).value;
+ const report=(await call('/reports','POST',{...inputs,profileId:a.id},owner)).value;
+ const saved=(await call('/reports/'+report.id,'GET',undefined,owner)).value;
+ const before=await db.prepare('SELECT input,body,profile_id FROM reports WHERE id=?').bind(report.id).first();
+ assert.equal((await call('/brand-view','POST',{profileId:b.id},owner)).status,200);
+ let workspace=(await call('','GET',undefined,owner)).value;assert.equal(workspace.preferences.selected_profile_id,b.id);
+ assert.ok(workspace.reports.some(r=>r.id===saved.id),'Base API and saved detail remain available regardless of view.');
+ assert.equal(workspace.reportCountsByBrand.find(r=>r.profile_id===a.id).total,1);
+ await call('/preferences','POST',{name:'Renamed workspace',market:'India',timezone:'Asia/Kolkata'},owner);
+ workspace=(await call('','GET',undefined,owner)).value;assert.equal(workspace.preferences.selected_profile_id,b.id);
+ assert.deepEqual(await db.prepare('SELECT input,body,profile_id FROM reports WHERE id=?').bind(report.id).first(),before);
+ assert.equal((await call('','GET',undefined,'other-brand-view')).value.preferences.selected_profile_id,undefined);
+ assert.equal((await call('/brand-view','POST',{profileId:null},owner)).status,200);assert.equal((await call('','GET',undefined,owner)).value.preferences.selected_profile_id,null);
+});
+test('Brand view writes reject foreign brands, invalid values, cross-site requests, unsigned visitors and developer keys',async()=>{
+ const a=(await call('/profiles','POST',{name:'View security'},'view-owner')).value;
+ assert.equal((await call('/brand-view','POST',{profileId:a.id},'foreign-view')).status,404);
+ for(const value of [{},{profileId:5},{profileId:'a/b'},{profileId:a.id,owner:'view-owner'},{profileId:'x'.repeat(100)}])assert.equal((await call('/brand-view','POST',value,'view-owner')).status,400);
+ assert.equal((await call('/brand-view','POST',{profileId:a.id},'')).status,401);
+ assert.equal((await call('/brand-view','POST',{profileId:a.id},'view-owner',{Origin:'https://other.example'})).status,403);
+ const key=(await call('/keys','POST',{name:'Brand view read-only'},'view-owner')).value.key;
+ assert.equal((await call('/brand-view','POST',{profileId:a.id},'view-owner',{Authorization:'Bearer '+key})).status,403);
+});
+test('Deleting a selected brand clears only its view preference through the additive nullable reference',async()=>{
+ const owner='delete-view',p=(await call('/profiles','POST',{name:'Temporary brand'},owner)).value;
+ await call('/brand-view','POST',{profileId:p.id},owner);await call('/preferences','POST',{name:'Keep my settings',market:'India',timezone:'Asia/Kolkata'},owner);
+ assert.equal((await call('/profiles/'+p.id,'DELETE',undefined,owner)).status,200);const prefs=(await call('','GET',undefined,owner)).value.preferences;assert.equal(prefs.selected_profile_id,null);assert.equal(prefs.name,'Keep my settings');
+});
+test('Manual monitoring can retain an explicit owned brand/project association without guessing from names',async()=>{
+ const owner='brand-manual-monitor',p=(await call('/profiles','POST',{name:'Shared brand name'},owner)).value;
+ const project=(await call('/projects','POST',{name:'Brand project',profileId:p.id},owner)).value;
+ const created=await call('/monitors','POST',{name:'Brand manual scan',cadence:'weekly',input:{...inputs,projectId:project.id}},owner);assert.equal(created.status,201);assert.equal(JSON.parse(created.value.input).profileId,p.id);assert.equal(JSON.parse(created.value.input).projectId,project.id);
+ await call('/monitors/'+created.value.id,'PATCH',{enabled:false},owner);
+ const foreign=(await call('/profiles','POST',{name:'Foreign'},'foreign-manual-view')).value;assert.equal((await call('/monitors','POST',{name:'Bad brand',cadence:'weekly',input:{...inputs,profileId:foreign.id}},owner)).status,404);
+});
+
+
+test('Deleting a brand detaches manual rule associations while retaining captured research context and pause state',async()=>{
+ const owner='manual-view-delete',p=(await call('/profiles','POST',{name:'Remove profile only'},owner)).value;
+ const rule=(await call('/monitors','POST',{name:'Keep manual question',cadence:'weekly',input:{...inputs,profileId:p.id,context:'Captured supplied context'}},owner)).value;
+ await call('/monitors/'+rule.id,'PATCH',{enabled:false},owner);await call('/brand-view','POST',{profileId:p.id},owner);
+ assert.equal((await call('/profiles/'+p.id,'DELETE',undefined,owner)).status,200);
+ const row=await db.prepare('SELECT * FROM monitors WHERE id=?').bind(rule.id).first();assert.equal(row.enabled,0);assert.equal(JSON.parse(row.input).profileId,undefined);assert.equal(JSON.parse(row.input).context,'Captured supplied context');
+ assert.equal((await call('','GET',undefined,owner)).value.preferences.selected_profile_id,null);
+});

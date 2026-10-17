@@ -1,10 +1,10 @@
 {
   "site_url": "https://signalforge-research-nr.brandmintai.chatgpt.site",
   "sites_project_id": "appgprj_6acf5cb489c08191a409ea6fa27858a1",
-  "sites_source_commit": "0fb7ecadfed759016ff6f02445ec381b81d3613a",
+  "sites_source_commit": "735769bc37b19b2cd730b21dcf9f232e63353556",
   "source_export": "git archive with Windows newline conversion disabled; tracked application blobs and modes checked against exact published Sites commit",
   "synchronized_date": "2026-10-17",
-  "published_version": 22,
+  "published_version": 24,
   "excluded_tracked_files": [
     "tsconfig.tsbuildinfo"
   ],
@@ -18,21 +18,23 @@
       "docs/repository-maintenance.md",
       "docs/source-release.json"
     ],
-    "lockfile_reconciliation": "Completed in canonical Sites version18; package-lock.json matches published source, with no GitHub-only dependency overrides."
+    "lockfile_reconciliation": "Canonical version24 restores exactly the two optional @emnapi1.10.0 records, with no existing dependency version changes and no GitHub-only lock override."
   },
   "verification": {
-    "fixture_policy_tests": 136,
-    "final_hardened_transport_tests": 4,
-    "typecheck": "passed",
-    "production_build_and_package_build": "passed",
-    "deployment": "Sites version22 succeeded; public URL and environment revision9 unchanged",
-    "email_acceptance": "one real test message accepted by Gmail from isolated Worker/D1 using existing sender authorization; operator confirmed inbox receipt; no inbox-read scope, production data changes or research calls",
-    "live_site_browser_qa": "not performed: interactive browser runtime unavailable this turn; no authenticated production UI claim",
-    "oauth_testing": "explicitly retained; visible seven-day expiry warning and operator reconnect remain necessary; no indefinite delivery guarantee",
-    "privacy": "no private recipient, owner, mail or record identifiers included in release proof; status-only notifications exclude report bodies, uploads and private tokens",
-    "theme_and_auth": "current theme/CSS, existing login/secrets/scheduler preserved; additive migration0015",
+    "fixture_policy_tests": 156,
+    "actual_react_dom_tests": 11,
+    "typecheck": "explicit exit0",
+    "production_build": "post-repair explicit exit0",
+    "deployment": "Sites version24 succeeded; public URL and environment revision9 unchanged",
+    "worker_d1": "owner-scoped preference persistence/isolation; invalid/foreign IDs; auth/CSRF/developer-write denial; settings/snapshot preservation; deletion/manual-rule associations",
+    "react_dom": "Happy DOM interaction tests exercise Workspace/child components with fixture HTTP: filters, reload, URL/Back state, unknown IDs, counts, details, draft preservation and failed-save recovery",
+    "live_browser_and_visual_limit": "no authenticated live browser walkthrough or pixel-layout QA; React DOM tests do not establish visual rendering",
+    "theme": "existing styles only; no CSS changes",
+    "migration": "0016 adds nullable selected-profile preference with ON DELETE SET NULL; original context snapshots remain unchanged",
+    "provider_calls": 0,
+    "scope_limits": "filter/default only, not a team permission boundary; explicit URL scope wins; other tabs/devices update on reload; unassociated legacy items remain under All brands",
     "github_actions": "must pass on exact pushed release commit; see repository Actions history",
-    "hosted_schema": "read-only live database overview confirmed the three additive email delivery/settings/outbox tables",
-    "postdeploy_http_limit": "direct local HTTP smoke timed out; no successful postdeploy API/browser walkthrough claimed"
+    "hosted_schema": "native read-only D1 overview confirmed preferences.selected_profile_id exists after the feature deployment",
+    "clean_install": "isolated npm11.19 Linux x64 ci dry-run passed after canonical two-record optional-lock repair"
   }
 }

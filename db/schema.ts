@@ -119,6 +119,7 @@ export const preferences = sqliteTable('preferences', {
   owner: text('owner').primaryKey(), name: text('name').notNull().default('My workspace'),
   market: text('market').notNull().default('Global'), timezone: text('timezone').notNull().default('Asia/Kolkata'),
   monitorAllBrands: integer('monitor_all_brands').notNull().default(0),
+  selectedProfileId:text('selected_profile_id').references(()=>profiles.id,{onDelete:'set null'}),
 });
 
 // Additive account migration. Existing workspace owners and records are kept.

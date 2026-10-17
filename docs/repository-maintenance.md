@@ -25,4 +25,4 @@ Keep the current SignalForge theme unless the user explicitly requests a design 
 
 ## Lockfile portability
 
-The missing optional @emnapi/core@1.10.0 and @emnapi/runtime@1.10.0 lock entries beneath @rolldown/binding-wasm32-wasi were reconciled into canonical Sites source in version18. The repository lockfile now matches that published source. Preserve a complete cross-platform lockfile when changing dependencies and verify clean npm ci in CI.
+The missing optional @emnapi/core@1.10.0 and @emnapi/runtime@1.10.0 lock entries beneath @rolldown/binding-wasm32-wasi were first reconciled into canonical Sites source in version18 and restored again in version24 after a development-dependency update dropped them. The version24 lock passed an isolated npm11.19 Linux x64 clean-install dry run. The repository lockfile matches that published source. Preserve a complete cross-platform lockfile when changing dependencies and verify clean npm ci in CI.
