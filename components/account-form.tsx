@@ -3,6 +3,7 @@ import {useEffect,useState,type FormEvent} from 'react';
 import {ArrowRight,ArrowUpRight,Check,Eye,EyeOff,Loader2,ShieldCheck} from 'lucide-react';
 import {Brand} from './brand';
 import ThemeToggle from './theme-toggle';
+import {captureInvitation} from '@/lib/invitation-handoff';
 import {safeAuthReturn} from '@/lib/auth-policy';
 
 type Mode='login'|'signup'|'forgot'|'reset';
@@ -18,6 +19,7 @@ async function request(path:string,body:unknown){
 }
 
 export default function AccountForm({mode,returnTo,token,initialError}:{mode:Mode;returnTo:string;token?:string;initialError?:string}){
+ useEffect(()=>{const invitation=captureInvitation(location,sessionStorage);if(invitation&&location.hash.startsWith('#invite='))history.replaceState({},'',location.pathname+location.search);},[]);
  const[available,setAvailable]=useState<Availability|null>(null),[busy,setBusy]=useState(false),[error,setError]=useState(initialError?(errors[initialError]||'Sign-in could not be completed. Please try again.'):'');
  const[notice,setNotice]=useState(''),[email,setEmail]=useState(''),[password,setPassword]=useState(''),[confirm,setConfirm]=useState(''),[name,setName]=useState(''),[show,setShow]=useState(false);
  const destination=safeAuthReturn(returnTo);

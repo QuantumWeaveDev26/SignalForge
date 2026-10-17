@@ -44,7 +44,7 @@ export const workflowRuns = sqliteTable('workflow_runs', {
   leaseUntil: text('lease_until'), created: text('created').notNull(), updated: text('updated').notNull(),
 }, t => [index('workflow_runs_owner_idx').on(t.owner)]);
 export const conversations = sqliteTable('conversations', {
-  id: text('id').primaryKey(), owner: text('owner').notNull(), title: text('title').notNull(),
+  id: text('id').primaryKey(), owner: text('owner').notNull(), createdBy:text('created_by'), title: text('title').notNull(),
   profileId: text('profile_id').references(() => profiles.id, { onDelete: 'set null' }),
   mode: text('mode').notNull().default('strategy'), context: text('context').notNull().default('{}'),
   projectId: text('project_id').references(() => projects.id, { onDelete: 'set null' }),
@@ -97,6 +97,7 @@ export const messages = sqliteTable('messages', {
 export const monitors = sqliteTable('monitors', {
   id: text('id').primaryKey(), owner: text('owner').notNull(), name: text('name').notNull(),
   input: text('input').notNull(), cadence: text('cadence').notNull(), enabled: integer('enabled').notNull().default(1),
+  schedule:text('schedule'),
   nextRun: text('next_run').notNull(), leaseUntil: text('lease_until'), lastReport: text('last_report'),
   error: text('error').notNull().default(''), created: text('created').notNull(),
   managedProfileId: text('managed_profile_id').references(() => profiles.id, { onDelete: 'cascade' }),
@@ -104,6 +105,7 @@ export const monitors = sqliteTable('monitors', {
 export const apiKeys = sqliteTable('api_keys', {
   id: text('id').primaryKey(), owner: text('owner').notNull(), name: text('name').notNull(),
   prefix: text('prefix').notNull(), digest: text('digest').notNull().unique(), created: text('created').notNull(),
+  scopes:text('scopes').notNull().default('["reports","profiles"]'), expires:text('expires'),
   revoked: integer('revoked').notNull().default(0),
 });
 export const attachments = sqliteTable('attachments', {
@@ -190,9 +192,33 @@ export const pitches = sqliteTable('pitches', {
 },t=>[index('pitches_owner_idx').on(t.owner,t.updated)]);
 export const pitchVersions = sqliteTable('pitch_versions', {
  id:text('id').primaryKey(),owner:text('owner').notNull(),pitchId:text('pitch_id').notNull().references(()=>pitches.id),
- revision:integer('revision').notNull(),body:text('body').notNull(),sources:text('sources').notNull(),label:text('label').notNull(),created:text('created').notNull(),
+ revision:integer('revision').notNull(),body:text('body').notNull(),sources:text('sources').notNull(),contextSnapshot:text('context_snapshot'),label:text('label').notNull(),created:text('created').notNull(),
 },t=>[uniqueIndex('pitch_versions_revision_idx').on(t.pitchId,t.revision)]);
 export const pitchRuns = sqliteTable('pitch_runs', {
  id:text('id').primaryKey(),owner:text('owner').notNull(),pitchId:text('pitch_id').notNull().references(()=>pitches.id),
  snapshot:text('snapshot').notNull(),created:text('created').notNull(),
 },t=>[index('pitch_runs_pitch_idx').on(t.owner,t.pitchId)]);
+
+// Append-only prior brand context. Restoring creates a fresh revision; saved research stays immutable.
+export const profileVersions=sqliteTable('profile_versions',{
+ id:text('id').primaryKey(),owner:text('owner').notNull(),profileId:text('profile_id').notNull().references(()=>profiles.id,{onDelete:'cascade'}),
+ revision:integer('revision').notNull(),data:text('data').notNull(),archivedAt:text('archived_at').notNull(),
+},t=>[uniqueIndex('profile_versions_revision_idx').on(t.profileId,t.revision),index('profile_versions_owner_idx').on(t.owner,t.profileId)]);
+
+// Team data uses a separate owner namespace; personal records are never moved or exposed.
+export const teamWorkspaces=sqliteTable('team_workspaces',{
+ id:text('id').primaryKey(),name:text('name').notNull(),createdBy:text('created_by').notNull(),created:text('created').notNull(),
+});
+export const teamMembers=sqliteTable('team_members',{
+ id:text('id').primaryKey(),workspaceId:text('workspace_id').notNull().references(()=>teamWorkspaces.id,{onDelete:'cascade'}),userId:text('user_id').notNull(),email:text('email').notNull().default(''),role:text('role').notNull(),created:text('created').notNull(),
+},t=>[uniqueIndex('team_member_unique_idx').on(t.workspaceId,t.userId),index('team_member_user_idx').on(t.userId)]);
+export const teamInvites=sqliteTable('team_invites',{
+ id:text('id').primaryKey(),workspaceId:text('workspace_id').notNull().references(()=>teamWorkspaces.id,{onDelete:'cascade'}),email:text('email').notNull(),role:text('role').notNull(),digest:text('digest').notNull().unique(),expires:text('expires').notNull(),state:text('state').notNull().default('pending'),created:text('created').notNull(),
+});
+
+export const pitchReviews=sqliteTable('pitch_reviews',{
+ id:text('id').primaryKey(),owner:text('owner').notNull(),pitchId:text('pitch_id').notNull().references(()=>pitches.id,{onDelete:'cascade'}),
+ revision:integer('revision').notNull(),actor:text('actor').notNull(),author:text('author').notNull(),decision:text('decision').notNull(),body:text('body').notNull(),created:text('created').notNull(),
+},t=>[index('pitch_reviews_pitch_idx').on(t.owner,t.pitchId,t.created)]);
+
+export const apiKeyUsage=sqliteTable('api_key_usage',{id:text('id').primaryKey(),keyId:text('key_id').notNull().references(()=>apiKeys.id,{onDelete:'cascade'}),minute:integer('minute').notNull(),count:integer('count').notNull().default(0)},t=>[index('api_key_usage_key_idx').on(t.keyId,t.minute)]);

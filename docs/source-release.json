@@ -1,10 +1,10 @@
 {
   "site_url": "https://signalforge-research-nr.brandmintai.chatgpt.site",
   "sites_project_id": "appgprj_6acf5cb489c08191a409ea6fa27858a1",
-  "sites_source_commit": "735769bc37b19b2cd730b21dcf9f232e63353556",
+  "sites_source_commit": "c163b1f39cf79fdada8a229a11c3e0afc5a2fce1",
   "source_export": "git archive with Windows newline conversion disabled; tracked application blobs and modes checked against exact published Sites commit",
   "synchronized_date": "2026-10-17",
-  "published_version": 24,
+  "published_version": 26,
   "excluded_tracked_files": [
     "tsconfig.tsbuildinfo"
   ],
@@ -21,20 +21,26 @@
     "lockfile_reconciliation": "Canonical version24 restores exactly the two optional @emnapi1.10.0 records, with no existing dependency version changes and no GitHub-only lock override."
   },
   "verification": {
-    "fixture_policy_tests": 156,
-    "actual_react_dom_tests": 11,
-    "typecheck": "explicit exit0",
-    "production_build": "post-repair explicit exit0",
-    "deployment": "Sites version24 succeeded; public URL and environment revision9 unchanged",
-    "worker_d1": "owner-scoped preference persistence/isolation; invalid/foreign IDs; auth/CSRF/developer-write denial; settings/snapshot preservation; deletion/manual-rule associations",
-    "react_dom": "Happy DOM interaction tests exercise Workspace/child components with fixture HTTP: filters, reload, URL/Back state, unknown IDs, counts, details, draft preservation and failed-save recovery",
-    "live_browser_and_visual_limit": "no authenticated live browser walkthrough or pixel-layout QA; React DOM tests do not establish visual rendering",
-    "theme": "existing styles only; no CSS changes",
-    "migration": "0016 adds nullable selected-profile preference with ON DELETE SET NULL; original context snapshots remain unchanged",
-    "provider_calls": 0,
-    "scope_limits": "filter/default only, not a team permission boundary; explicit URL scope wins; other tabs/devices update on reload; unassociated legacy items remain under All brands",
-    "github_actions": "must pass on exact pushed release commit; see repository Actions history",
-    "hosted_schema": "native read-only D1 overview confirmed preferences.selected_profile_id exists after the feature deployment",
-    "clean_install": "isolated npm11.19 Linux x64 ci dry-run passed after canonical two-record optional-lock repair"
-  }
+    "fixture_policy_tests": 184,
+    "worker_d1_integration_tests": 81,
+    "actual_react_dom_tests": 16,
+    "format_schedule_handoff_tests": 10,
+    "authentication": "Real Better Auth test adapter checked session token redaction and revoked-session rejection.",
+    "typecheck": "Passed.",
+    "production_build": "Passed.",
+    "clean_install": "Isolated npm11.19 Linux x64 ci dry-run passed; published lockfile unchanged.",
+    "deployment": "Native Sites version26 publish succeeded; existing public site and environment revision9 retained.",
+    "hosted_schema": "Read-only live D1 checks confirmed all10 relevant table/column checks across team membership/invites, brand history, pitch reviews/context snapshots, API usage/scopes/expiry, monitor schedules and conversation authorship. No live test records were inserted.",
+    "provider_calls": "No real research/provider/email requests made for this release.",
+    "limits": [
+      "No authenticated production browser walkthrough or real microphone recording; speech engine mocked for DOM tests.",
+      "PowerPoint OOXML/content/relationships tested; native PowerPoint visual rendering unavailable.",
+      "Not exhaustive Waldo parity; remaining product/external-service limits are stated in README and docs/provider-free-release-acceptance.json."
+    ],
+    "github_actions": "Must pass on the exact pushed release commit; see repository Actions history.",
+    "compatibility": "Actual React DOM regression covers UTC fallback for legacy invalid workspace timezone preferences; full suite passed after correction."
+  },
+  "schema_migrations": "Append-only schema migrations0017\u20130024; preserve personal content and legacy API-key permissions/lifetimes.",
+  "rollback": "Preserve added schema. Before source rollback to version24 or earlier, revoke new scoped/expiring keys or disable developer access because older authorization ignores those fields. Do not remap team namespaces into personal owners.",
+  "theme": "Existing website theme and app/site.css unchanged."
 }

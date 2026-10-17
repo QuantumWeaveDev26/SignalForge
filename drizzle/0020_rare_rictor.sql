@@ -1,0 +1,1 @@
+ALTER TABLE `conversations` ADD `created_by` text;

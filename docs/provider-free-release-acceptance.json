@@ -1,0 +1,37 @@
+{
+  "scope": "Provider-free Waldo-aligned collaboration and research workspace tools",
+  "date": "2026-10-17",
+  "sourceFolder": "Canonical C-drive project folder",
+  "features": [
+    "Separate team namespaces; approved Owner/Editor/Viewer roles; email-bound hash-only seven-day private invitations; revocation and role checks on every subsequent request; My/All chat creator filters",
+    "Brand context history from activation with CAS-checked restore into a fresh revision",
+    "PPTX slide-order text extraction; XLSX visible sheet/cell values with cached-formula disclosures; separately attributed DOCX secondary parts",
+    "Editable saved-report/pitch PowerPoint text exports with complete body/source trail, bounded pagination, and existing palette",
+    "Optional browser speech dictation, review before send, no auto-send and navigation cleanup",
+    "IANA local-time monitor schedules with DST/month-end/coalescing rules; legacy UTC and managed weekly behavior preserved",
+    "Pitch revision-specific team reviews/owner decisions; full context snapshots for new revisions; legacy limitations; older revision pagination",
+    "Full workflow run history, full project report links, project created-since and explicitly linked enabled-monitor filters",
+    "Active session/device listing with server-only tokens and revocation",
+    "Read-only report/profile API key scopes, new-key expiry, atomic 60/min rate budget, rolling 24h counts, full paginated REST/MCP report search"
+  ],
+  "verification": {
+    "worker": "81 actual Worker/D1 integration tests passed, including stale/foreign access, role demotion/removal, invitation reuse and membership cap, API scopes/expiry/rate/revocation, context snapshots and history",
+    "dom": "16 actual Workspace React DOM interactions in Happy DOM; includes owner/viewer controls, voice transcript/no auto-send/cleanup, local viewer filters and combined project filters Legacy invalid timezone initialization was reproduced, fixed with UTC fallback, and regression-tested.",
+    "formats": "10 parser/scheduling/OOXML/handoff checks passed",
+    "authentication": "Real Better Auth test adapter verifies device token redaction and revoked-session rejection",
+    "typecheck": "Passed",
+    "build": "Passed",
+    "cleanInstall": "Isolated npm11.19 Linux x64 ci dry-run passed; existing lock unchanged",
+    "fullSuite": "184 tests passed; zero failures/skips"
+  },
+  "limits": [
+    "No authenticated live Edge/browser walkthrough or microphone recording claimed. Browser audio recognition was tested through a mocked browser engine; provider support varies.",
+    "PowerPoint OOXML and relationships/content are validated; no native PowerPoint visual rendering was available.",
+    "No real provider research/email requests were made. Existing auth/scheduler/provider/billing configuration and current website CSS/theme are unchanged.",
+    "This is not exhaustive Waldo parity. OCR/scanned images/chart reasoning, fine-grained per-record/privacy/requester controls, external client portals, team paid-plan/email sharing, ownership transfer and retention administration remain unavailable.",
+    "Provider datasets, merchant activation and Gmail Testing expiry still require separate inputs; no claims of those being enabled."
+  ],
+  "migration": "Append-only schema-only migrations0017–0024; existing personal content and legacy key lifetimes retained; no live test seeds",
+  "rollback": "Preserve added schema. Before rolling source back to v24/earlier, revoke newly scoped/expiring keys or disable developer access: old authorization code ignores those fields. Team namespaces must not be remapped into personal owners.",
+  "theme": "Current website theme unchanged; no app/site.css edits; exports use existing palette"
+}

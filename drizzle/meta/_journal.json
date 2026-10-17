@@ -120,6 +120,62 @@
       "when": 1792222909609,
       "tag": "0016_nebulous_mandarin",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1792229010507,
+      "tag": "0017_stiff_harry_osborn",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1792229071701,
+      "tag": "0018_opposite_kingpin",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1792229284433,
+      "tag": "0019_sour_polaris",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1792229487976,
+      "tag": "0020_rare_rictor",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1792229710042,
+      "tag": "0021_yellow_warstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1792229863269,
+      "tag": "0022_aberrant_azazel",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1792230199976,
+      "tag": "0023_premium_iron_patriot",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1792230507066,
+      "tag": "0024_overconfident_silverclaw",
+      "breakpoints": true
     }
   ]
 }

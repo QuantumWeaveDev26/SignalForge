@@ -29,24 +29,24 @@ export async function createPitch(owner:string,value:any){
  const time=now(),body=initialPlaybook(input);
  const result=await db().batch([
   db().prepare('INSERT OR IGNORE INTO pitches (id,owner,input,agency,body,project_id,profile_id,created,updated) SELECT ?,?,?,?,?,?,?,?,? WHERE (SELECT count(*) FROM pitches WHERE owner=?)<100').bind(record,owner,JSON.stringify(input),JSON.stringify(agency),body,links.projectId,links.profileId,time,time,owner),
-  db().prepare("INSERT OR IGNORE INTO pitch_versions (id,owner,pitch_id,revision,body,sources,label,created) SELECT ?,owner,id,1,body,sources,'Initial manual draft',created FROM pitches WHERE id=? AND owner=?").bind(id(),record,owner)
+  db().prepare("INSERT OR IGNORE INTO pitch_versions (id,owner,pitch_id,revision,body,sources,context_snapshot,label,created) SELECT ?,owner,id,1,body,sources,json_object('input',json(input),'agency',json(agency),'projectId',project_id,'profileId',profile_id),'Initial manual draft',created FROM pitches WHERE id=? AND owner=?").bind(id(),record,owner)
  ]);
  if(!result[0].meta.changes&&!await one('SELECT id FROM pitches WHERE id=? AND owner=?',record,owner))throw new AppError('This workspace supports 100 saved pitches.');
  return pitchState(record,owner);
 }
-async function revise(row:any,owner:string,value:any,label:string,override?:{body:string;sources:any[]}){
+async function revise(row:any,owner:string,value:any,label:string,override?:{body:string;sources:any[];agency?:any}){
  const revision=expected(value.expectedRevision);
  if(value.archived!==undefined&&typeof value.archived!=='boolean')throw new AppError('Choose an archive state.');
  if(value.refreshAgency!==undefined&&typeof value.refreshAgency!=='boolean')throw new AppError('Choose whether to refresh agency credentials.');
  const previous=JSON.parse(row.input),input=value.input===undefined?previous:pitchInput(value.input);
  if(value.input!==undefined)await validateFiles(input,owner);
  const links=await associations({projectId:value.projectId===undefined?row.project_id:value.projectId,profileId:value.profileId===undefined?row.profile_id:value.profileId},owner);
- const agency=input.agencyId!==previous.agencyId||value.refreshAgency?await snapshotAgency(input.agencyId,owner):JSON.parse(row.agency);
+ const agency=override&&Object.hasOwn(override,"agency")?override.agency:input.agencyId!==previous.agencyId||value.refreshAgency?await snapshotAgency(input.agencyId,owner):JSON.parse(row.agency);
  const body=override?.body??(value.body===undefined?row.body:bounded(value.body,'Playbook',50000,true)),sources=override?.sources??JSON.parse(row.sources),time=now();
  if(body.length>50000)throw new AppError('The playbook is too long (maximum 50,000 characters).');
  const results=await db().batch([
   db().prepare('UPDATE pitches SET input=?,agency=?,body=?,sources=?,project_id=?,profile_id=?,archived=?,revision=revision+1,updated=? WHERE id=? AND owner=? AND revision=?').bind(JSON.stringify(input),JSON.stringify(agency),body,JSON.stringify(sources),links.projectId,links.profileId,value.archived===undefined?row.archived:value.archived?1:0,time,row.id,owner,revision),
-  db().prepare('INSERT OR IGNORE INTO pitch_versions (id,owner,pitch_id,revision,body,sources,label,created) SELECT ?,owner,id,revision,body,sources,?,updated FROM pitches WHERE id=? AND owner=? AND revision=?').bind(id(),label,row.id,owner,revision+1)
+  db().prepare("INSERT OR IGNORE INTO pitch_versions (id,owner,pitch_id,revision,body,sources,context_snapshot,label,created) SELECT ?,owner,id,revision,body,sources,json_object('input',json(input),'agency',json(agency),'projectId',project_id,'profileId',profile_id),?,updated FROM pitches WHERE id=? AND owner=? AND revision=?").bind(id(),label,row.id,owner,revision+1)
  ]);
  if(!results[0].meta.changes)throw new AppError('This pitch changed in another tab. Your edits were not saved. Reload the latest revision and merge your changes.',409);
  return pitchState(row.id,owner);
@@ -73,4 +73,4 @@ export async function importPitchResearch(record:string,owner:string,value:any){
  return revise(pitch,owner,value,'Imported research '+report.id,{body:report.body,sources:report.sources});
 }
 export async function pitchVersion(record:string,version:string,owner:string){const row=await owned('pitch_versions',version,owner);if(row.pitch_id!==record)throw new AppError('Revision not found.',404);return {...row,sources:JSON.parse(row.sources)};}
-export async function restorePitchVersion(record:string,owner:string,value:any){const row=await owned('pitches',record,owner),version=await pitchVersion(record,reference(value.versionId,'Revision')||'',owner);return revise(row,owner,value,'Restored playbook revision '+version.revision,{body:version.body,sources:version.sources});}
+export async function restorePitchVersion(record:string,owner:string,value:any){const row=await owned('pitches',record,owner),version=await pitchVersion(record,reference(value.versionId,'Revision')||'',owner);if(value.allContext===true){if(!version.context_snapshot)throw new AppError('This legacy revision has no saved brief/agency snapshot. Restore the playbook only.');const saved=JSON.parse(version.context_snapshot);return revise(row,owner,{...value,input:saved.input,projectId:saved.projectId,profileId:saved.profileId},'Restored complete revision '+version.revision,{body:version.body,sources:version.sources,agency:saved.agency});}return revise(row,owner,value,'Restored playbook revision '+version.revision,{body:version.body,sources:version.sources});}

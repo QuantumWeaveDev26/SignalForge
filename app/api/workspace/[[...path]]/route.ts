@@ -1,3 +1,8 @@
+import {keyOptions,requireKeyScope} from '@/lib/api-access';
+import {pitchReviews,addPitchReview} from '@/lib/pitch-reviews';
+import {workflowHistory,pitchHistory} from '@/lib/work-history';
+import {teamsAction,teamPermission} from '@/lib/teams';
+import {monitorSchedule,scheduledRun} from '@/lib/monitor-schedule';
 import { env } from 'cloudflare:workers';
 import { all, one, run, identity, owned, publicReport, launch, refresh, chat, runMonitors, syncBrandMonitors, now, id, digest, db } from '@/lib/server';
 import { AppError, bounded, validateResearch } from '@/lib/research';
@@ -11,7 +16,7 @@ import {listContextFiles,uploadContextFile,previewContextFile,downloadContextFil
 import {listAgencies,saveAgency,listPitches,pitchState,createPitch,updatePitch,startPitchResearch,importPitchResearch,pitchVersion,restorePitchVersion} from '@/lib/pitches';
 import {monitorHistory} from '@/lib/monitor-history';
 import {reportLibrary} from '@/lib/report-library';
-import {saveProfile,brandWorkspace} from '@/lib/brand-workspace';
+import {saveProfile,brandWorkspace,profileHistory,restoreProfile} from '@/lib/brand-workspace';
 import {saveManagerDemo} from '@/lib/manager-demo';
 import {monitorEmailState,setMonitorEmail,sendMonitorEmailTest,retryMonitorEmail,checkMailHealth} from '@/lib/monitor-email';
 export const dynamic='force-dynamic';
@@ -21,7 +26,10 @@ async function handle(req:Request){
   try {
     const method=req.method;const mutation=method!=='GET';const who=await identity(req,mutation);const owner=who.owner;
     const parts=new URL(req.url).pathname.replace(/^\/api\/workspace\/?/,'').split('/').filter(Boolean);const [area,record,action]=parts;
-    if(who.api&&!['reports','profiles'].includes(area))throw new AppError('This API key can only read reports and profiles.',403);
+    if(area==='teams'){const result:any=await teamsAction(req,who,parts,method==='GET'||method==='DELETE'?{}:await body(req,2048));if(result.cookie){const {cookie,...data}=result;const res=json(data);res.headers.set('Set-Cookie',cookie);return res;}return json(result);}
+    teamPermission(who,method,area,record,action);
+    if(who.api&&!['reports','profiles','report-library'].includes(area))throw new AppError('This API key can only read reports and profiles.',403);
+    if(who.api)requireKeyScope(who,area==='profiles'?'profiles':'reports');
     if(area==='brand-view'&&method==='POST'&&!record){
       const value=await body(req,256);if(Object.keys(value).some(k=>k!=='profileId')||!Object.hasOwn(value,'profileId'))throw new AppError('Choose a saved brand or all brands.');
       const profileId=reference(value.profileId,'Brand');if(profileId)await owned('profiles',profileId,owner);
@@ -36,11 +44,12 @@ async function handle(req:Request){
       if(method==='POST'&&record&&action==='retry'){const value=await body(req,256);return json(await retryMonitorEmail(who,record,value.acknowledgeDuplicateRisk));}
     }
     if(area==='demo-pack'&&method==='POST'&&!record){const value=await body(req,256);if(value.pack!=='coffee-launch-v1'||Object.keys(value).some(k=>k!=='pack'))throw new AppError('Choose the prepared coffee launch demo.');return json(await saveManagerDemo(owner));}
+    if(area==='workflow-history'&&method==='GET'&&!record)return json(await workflowHistory(owner,new URL(req.url).searchParams));
     if(area==='report-library'&&method==='GET'&&!record)return json(await reportLibrary(owner,new URL(req.url).searchParams));
     if(!area&&method==='GET'){
       const reports=await all('SELECT * FROM reports WHERE owner=? ORDER BY created DESC LIMIT 100',owner);
       const prefs=await one('SELECT * FROM preferences WHERE owner=?',owner);
-      return json({user:{name:who.name,email:who.email,authSource:who.authSource},preferences:prefs||{name:'My workspace',market:'Global',timezone:'Asia/Kolkata'},reports:reports.map(r=>publicReport(r)),reportCounts:await one("SELECT count(*) AS total,COALESCE(sum(status='completed'),0) AS completed FROM reports WHERE owner=?",owner),reportCountsByBrand:await all("SELECT profile_id,count(*) AS total,COALESCE(sum(status='completed'),0) AS completed FROM reports WHERE owner=? GROUP BY profile_id",owner),catalogFavorites:(await all('SELECT preset_id FROM catalog_favorites WHERE owner=?',owner)).map(f=>f.preset_id),projects:await all('SELECT * FROM projects WHERE owner=? ORDER BY updated DESC',owner),workflows:(await all('SELECT * FROM workflows WHERE owner=? ORDER BY favorite DESC,updated DESC',owner)).map(publicWorkflow),workflowRuns:await all('SELECT id,name,project_id,profile_id,status,error,created,updated FROM workflow_runs WHERE owner=? ORDER BY created DESC LIMIT 100',owner),profiles:await all('SELECT * FROM profiles WHERE owner=? ORDER BY created DESC',owner),monitors:await all('SELECT * FROM monitors WHERE owner=? ORDER BY created DESC',owner),attachments:await listContextFiles(owner),keys:await all('SELECT id,name,prefix,created,revoked FROM api_keys WHERE owner=? ORDER BY created DESC',owner),providerReady:!!config().key,backgroundReady:backgroundReady(),model:config().model,schedulerActive:env.MONITOR_SCHEDULER_ACTIVE==='true',limits:{reportsDaily:8,concurrent:3,followupsDaily:40,chatTurnsDaily:40}});
+      return json({user:{name:who.name,email:who.email,userId:who.userId,authSource:who.authSource,role:who.role,workspaceId:who.workspaceId,workspaceName:who.workspaceName},preferences:prefs||{name:'My workspace',market:'Global',timezone:'Asia/Kolkata'},reports:reports.map(r=>publicReport(r)),reportCounts:await one("SELECT count(*) AS total,COALESCE(sum(status='completed'),0) AS completed FROM reports WHERE owner=?",owner),reportCountsByBrand:await all("SELECT profile_id,count(*) AS total,COALESCE(sum(status='completed'),0) AS completed FROM reports WHERE owner=? GROUP BY profile_id",owner),catalogFavorites:(await all('SELECT preset_id FROM catalog_favorites WHERE owner=?',owner)).map(f=>f.preset_id),projects:await all('SELECT * FROM projects WHERE owner=? ORDER BY updated DESC',owner),workflows:(await all('SELECT * FROM workflows WHERE owner=? ORDER BY favorite DESC,updated DESC',owner)).map(publicWorkflow),workflowRuns:await all('SELECT id,name,project_id,profile_id,status,error,created,updated FROM workflow_runs WHERE owner=? ORDER BY created DESC LIMIT 100',owner),profiles:await all('SELECT * FROM profiles WHERE owner=? ORDER BY created DESC',owner),monitors:await all('SELECT * FROM monitors WHERE owner=? ORDER BY created DESC',owner),attachments:await listContextFiles(owner),keys:who.workspaceId?[]:await all('SELECT k.id,k.name,k.prefix,k.created,k.revoked,k.scopes,k.expires,COALESCE((SELECT sum(u.count) FROM api_key_usage u WHERE u.key_id=k.id AND u.minute>=?),0) AS requests24h FROM api_keys k WHERE k.owner=? ORDER BY k.created DESC',Math.floor(Date.now()/60000)-1440,owner),providerReady:!!config().key,backgroundReady:backgroundReady(),model:config().model,schedulerActive:env.MONITOR_SCHEDULER_ACTIVE==='true',limits:{reportsDaily:8,concurrent:3,followupsDaily:40,chatTurnsDaily:40}});
     }
     if(area==='agencies'){
       if(method==='GET'&&!record)return json(await listAgencies(owner));
@@ -51,6 +60,9 @@ async function handle(req:Request){
       if(method==='GET'&&!record)return json(await listPitches(owner));
       if(method==='POST'&&!record)return json(await createPitch(owner,await body(req,350000)),201);
       if(record){
+        if(method==='GET'&&action==='history')return json(await pitchHistory(record,owner,new URL(req.url).searchParams.get('before')));
+        if(method==='GET'&&action==='reviews')return json(await pitchReviews(record,who,new URL(req.url).searchParams.get('before')));
+        if(method==='POST'&&action==='reviews')return json(await addPitchReview(record,who,await body(req,12000)));
         if(method==='GET'&&!action)return json(await pitchState(record,owner));
         if(method==='GET'&&action==='versions')return json(await pitchVersion(record,parts[3]||'',owner));
         if(method==='PATCH'&&!action)return json(await updatePitch(record,owner,await body(req,350000)));
@@ -60,8 +72,8 @@ async function handle(req:Request){
       }
     }
     if(area==='conversations'){
-      if(method==='GET'){if(record&&action==='turns'){const page=await conversationHistory(record,owner,new URL(req.url).searchParams.get('before'));return json({turns:page.rows.reverse().map(publicTurn),hasOlder:page.hasOlder,oldestCursor:page.oldestCursor});}return json(record?await conversationState(record,owner):await listConversations(owner,new URL(req.url).searchParams));}
-      if(method==='POST'&&!record)return json(await createConversation(owner,await body(req)),201);
+      if(method==='GET'){if(record&&action==='turns'){const page=await conversationHistory(record,owner,new URL(req.url).searchParams.get('before'));return json({turns:page.rows.reverse().map(publicTurn),hasOlder:page.hasOlder,oldestCursor:page.oldestCursor});}return json(record?await conversationState(record,owner):await listConversations(owner,new URL(req.url).searchParams,who.workspaceId&&new URL(req.url).searchParams.get("visibility")==="mine"?who.userId:undefined));}
+      if(method==='POST'&&!record)return json(await createConversation(owner,await body(req),who.userId||null),201);
       if(record){
         await owned('conversations',record,owner);
         if(method==='POST'&&action==='turns')return json(await sendConversation(record,owner,await body(req)),201);
@@ -110,6 +122,9 @@ async function handle(req:Request){
       if(method==='POST'&&action==='stop'){await owned('workflow_runs',record,owner);const time=now();const stopped=await run("UPDATE workflow_runs SET status='cancelled',background_enabled=0,updated=? WHERE id=? AND owner=? AND (lease_until IS NULL OR lease_until<?)",time,record,owner,time);if(!stopped.meta.changes)throw new AppError('A step is starting. Wait a moment, then stop remaining steps.',409);return json({ok:true});}
     }
     if(area==='profiles'){
+      if(record&&action==='history'&&method==='GET'){if(who.api)throw new AppError('Sign in to read brand history.',403);return json(await profileHistory(record,owner,new URL(req.url).searchParams.get('before')));}
+      if(record&&action==='restore'&&method==='POST')return json(await restoreProfile(record,owner,await body(req,256)));
+
       if(method==='GET'&&record&&action==='workspace'){if(who.api)throw new AppError('Sign in to open the brand workspace.',403);return json(await brandWorkspace(record,owner));}
       if(method==='GET')return json(record?await owned('profiles',record,owner):await all('SELECT * FROM profiles WHERE owner=? ORDER BY created DESC',owner));
       if(method==='POST'&&!record)return json(await saveProfile(owner,await body(req)),201);
@@ -129,6 +144,7 @@ async function handle(req:Request){
     }
     if(area==='messages'&&method==='GET'){await owned('reports',record,owner);return json((await all('SELECT id,role,body,sources,created FROM messages WHERE report_id=? AND owner=? ORDER BY created',record,owner)).map(m=>({...m,sources:JSON.parse(m.sources)})));}
     if(area==='monitors'){
+      if(method==='PATCH'&&record&&action==='schedule'){const monitor=await owned('monitors',record,owner);const v=await body(req,1024);const schedule=monitorSchedule(v.schedule),cadence=v.cadence||monitor.cadence;if(monitor.managed_profile_id&&cadence!=='weekly')throw new AppError('Automatic brand rules keep their weekly cadence. Create a manual rule for another cadence.');if(!['daily','weekly','monthly'].includes(cadence))throw new AppError('Invalid cadence.');const result=await run('UPDATE monitors SET schedule=?,cadence=?,next_run=? WHERE id=? AND owner=? AND next_run=? AND (lease_until IS NULL OR lease_until<?)',JSON.stringify(schedule),cadence,scheduledRun(cadence,schedule),record,owner,v.expectedNextRun,now());if(!result.meta.changes)throw new AppError('The rule changed or a scan is starting. Reload before changing its schedule.',409);return json(await owned('monitors',record,owner));}
       if(method==='GET'&&record&&action==='history')return json(await monitorHistory(record,owner,new URL(req.url).searchParams));
       if(method==='POST'&&record==='all-brands'){
         const v=await body(req);if(typeof v.enabled!=='boolean')throw new AppError('Provide an enabled state.');
@@ -143,7 +159,7 @@ async function handle(req:Request){
       if(record&&method==='DELETE'){const monitor=await owned('monitors',record,owner);if(monitor.managed_profile_id)throw new AppError('Pause this brand rule, or disable all-brand monitoring before removing its brand.');await run('DELETE FROM monitors WHERE id=? AND owner=?',record,owner);return json({ok:true});}
     }
     if(area==='keys'){
-      if(method==='POST'){const count=await one('SELECT count(*) AS n FROM api_keys WHERE owner=? AND revoked=0',owner);if(count.n>=5)throw new AppError('Revoke a key before creating another (maximum 5).');const v=await body(req);const token='sf_'+id().replaceAll('-','')+id().replaceAll('-','');const keyId=id();await run('INSERT INTO api_keys (id,owner,name,prefix,digest,created) VALUES (?,?,?,?,?,?)',keyId,owner,bounded(v.name,'Key name',100,true),token.slice(0,11),await digest(token),now());return json({id:keyId,token},201);}
+      if(method==='POST'){const count=await one('SELECT count(*) AS n FROM api_keys WHERE owner=? AND revoked=0',owner);if(count.n>=5)throw new AppError('Revoke a key before creating another (maximum 5).');const v=await body(req);const options=keyOptions(v);const token='sf_'+id().replaceAll('-','')+id().replaceAll('-','');const keyId=id();await run('INSERT INTO api_keys (id,owner,name,prefix,digest,created,scopes,expires) VALUES (?,?,?,?,?,?,?,?)',keyId,owner,bounded(v.name,'Key name',100,true),token.slice(0,11),await digest(token),now(),JSON.stringify(options.scopes),options.expires);return json({id:keyId,token},201);}
       if(method==='DELETE'&&record){await run('UPDATE api_keys SET revoked=1 WHERE id=? AND owner=?',record,owner);return json({ok:true});}
     }
     if(area==='preferences'&&method==='POST'){const v=await body(req);await run('INSERT INTO preferences (owner,name,market,timezone) VALUES (?,?,?,?) ON CONFLICT(owner) DO UPDATE SET name=excluded.name,market=excluded.market,timezone=excluded.timezone',owner,bounded(v.name,'Workspace name',100,true),bounded(v.market,'Market',100)||'Global',bounded(v.timezone,'Timezone',100)||'Asia/Kolkata');return json({ok:true});}

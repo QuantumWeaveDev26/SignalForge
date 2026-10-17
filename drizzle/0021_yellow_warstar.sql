@@ -1,0 +1,1 @@
+ALTER TABLE `pitch_versions` ADD `context_snapshot` text;

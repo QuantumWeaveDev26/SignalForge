@@ -1,3 +1,6 @@
+import {consumeApiKey} from './api-access';
+import {resolveWorkspace} from './teams';
+import {scheduledRun} from './monitor-schedule';
 import { env } from 'cloudflare:workers';
 import { getApplicationUser } from './application-auth';
 import { AppError, validateResearch, researchPrompt, extractResponse, nextMonitorRun, bounded } from './research';
@@ -16,9 +19,10 @@ export async function identity(request: Request, mutation = false) {
   const auth = request.headers.get('authorization');
   if (auth?.startsWith('Bearer ')) {
     if (mutation) throw new AppError('Developer keys are read-only. Sign in to start research or change settings.', 403);
-    const key = await one('SELECT owner FROM api_keys WHERE digest=? AND revoked=0', await digest(auth.slice(7)));
-    if (!key) throw new AppError('Invalid or revoked API key.', 401);
-    return { owner: key.owner as string, name: 'API client', email: '', api: true, authSource: 'api' as const };
+    const key = await one('SELECT id,owner,scopes,expires FROM api_keys WHERE digest=? AND revoked=0', await digest(auth.slice(7)));
+    if (!key||key.expires&&key.expires<=now()) throw new AppError('Invalid, expired or revoked API key.', 401);
+    const scopes=await consumeApiKey(key);
+    return { owner: key.owner as string, name: 'API client', email: '', api: true, scopes, authSource: 'api' as const };
   }
   const user = await getApplicationUser(); if (!user) throw new AppError('Sign in to access your workspace.',401);
   if (mutation) {
@@ -26,7 +30,7 @@ export async function identity(request: Request, mutation = false) {
     if (!origin || origin !== new URL(request.url).origin) throw new AppError('This action must be sent from your workspace.',403);
     if (request.headers.get('sec-fetch-site') === 'cross-site') throw new AppError('Cross-site requests are not accepted.',403);
   }
-  return {owner:user.owner,userId:user.userId,name:user.name,email:user.email,api:false,authSource:user.authSource};
+  return {...await resolveWorkspace(request,user),api:false};
 }
 export async function owned(table: 'reports'|'profiles'|'monitors'|'attachments'|'projects'|'workflows'|'workflow_runs'|'conversations'|'conversation_turns'|'agencies'|'pitches'|'pitch_versions'|'pitch_runs', record: string, owner: string) {
   const row = await one(`SELECT * FROM ${table} WHERE id=? AND owner=?`,record,owner); if (!row) throw new AppError('This item was not found in your workspace.',404); return row;
@@ -105,7 +109,7 @@ export async function runMonitors(owner: string) {
     // A persisted reservation survives a lost HTTP response or an expired lease.
     // Never repeat a provider launch whose outcome may already have been billed.
     const occurrence=()=>one('SELECT * FROM reports WHERE owner=? AND monitor_id=? AND monitor_due=?',owner,monitor.id,monitor.next_run);
-    const finish=async(report:any,error='')=>run('UPDATE monitors SET next_run=?,last_report=?,lease_until=NULL,error=? WHERE id=? AND owner=? AND next_run=? AND lease_until=?',nextMonitorRun(monitor.cadence,monitor.next_run,new Date(),monitor.created),report.id,error,monitor.id,owner,monitor.next_run,lease);
+    const finish=async(report:any,error='')=>run('UPDATE monitors SET next_run=?,last_report=?,lease_until=NULL,error=? WHERE id=? AND owner=? AND next_run=? AND lease_until=?',monitor.schedule?scheduledRun(monitor.cadence,JSON.parse(monitor.schedule)):nextMonitorRun(monitor.cadence,monitor.next_run,new Date(),monitor.created),report.id,error,monitor.id,owner,monitor.next_run,lease);
     try {
       let report=await occurrence();
       if(!report)report=await launch(JSON.parse(monitor.input),owner,monitor.id,undefined,monitor.next_run);

@@ -145,3 +145,12 @@ test('Gmail transport validates the mailbox and never sends an injected or exter
   await assert.rejects(()=>sendAccountEmail(config,{to:'recipient@example.com',url:origin+'/verify',kind:'verify'}),/sender does not match/);
  }finally{globalThis.fetch=original;}
 });
+
+test('Account device list redacts tokens and other accounts, and revoked sessions cannot authenticate again',async()=>{
+ const {build}=await import('esbuild');const b=await build({entryPoints:['lib/account-security.ts'],bundle:true,write:false,format:'esm',platform:'browser'});const {accountDevices,revokeDevice}=await import('data:text/javascript;base64,'+Buffer.from(b.outputFiles[0].text).toString('base64'));
+ const email='device-qa@example.com',pass='Device-QA-only-password-593!';const signup=await auth.handler(new Request(origin+'/api/auth/sign-up/email',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({name:'Device QA',email,password:pass})}));assert.ok(signup.ok);
+ await db.prepare('UPDATE auth_user SET email_verified=1 WHERE email=?').bind(email).run();
+ async function signin(){const response=await auth.handler(new Request(origin+'/api/auth/sign-in/email',{method:'POST',headers:{Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})}));assert.ok(response.ok);return new Headers({Cookie:response.headers.getSetCookie().map(x=>x.split(';')[0]).join('; '),Origin:origin});}
+ const first=await signin(),second=await signin(),state=await accountDevices(auth,first);assert.equal(state.items.length,2);assert.ok(state.items.some(s=>s.current));assert.doesNotMatch(JSON.stringify(state),/token|password/);
+ const other=state.items.find(s=>!s.current);await assert.rejects(()=>revokeDevice(auth,first,state.currentId),/Sign out/);await assert.rejects(()=>revokeDevice(auth,first,'another-account-session'),/not found/);assert.equal((await revokeDevice(auth,first,other.id)).ok,true);assert.equal(await auth.api.getSession({headers:second,query:{disableRefresh:true}}),null);assert.equal((await accountDevices(auth,first)).items.length,1);
+});

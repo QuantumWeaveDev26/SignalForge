@@ -21,16 +21,17 @@ before(async()=>{
  import {GET,POST,PATCH,DELETE} from './app/api/workspace/[[...path]]/route.ts';
  import {POST as webhook} from './app/api/webhooks/openai/route.ts';
  import {POST as monitorTick} from './app/api/monitor-tick/route.ts';
+ import {POST as mcp} from './app/api/mcp/route.ts';
  import {GET as sharedReport} from './app/api/shared/[token]/route.ts';
  import {createTrackedAppRouteRequest} from './node_modules/vinext/dist/server/app-route-handler-runtime.js';
  import {setOwner} from 'fixture-identity'; import {control,inspection} from 'fixture-provider';
- export default {async fetch(request){setOwner(request.headers.get('x-fixture-owner'));control(request.headers);if(new URL(request.url).pathname==='/fixture')return Response.json(inspection());if(new URL(request.url).pathname==='/api/webhooks/openai')return webhook(request);if(new URL(request.url).pathname==='/api/monitor-tick')return monitorTick(request);if(new URL(request.url).pathname.startsWith('/api/shared/'))return sharedReport(request);return ({GET,POST,PATCH,DELETE})[request.method](createTrackedAppRouteRequest(request).request);}};`},bundle:true,write:false,format:'esm',platform:'browser',external:['cloudflare:workers','node:*'],plugins:[{name:'workspace-fixtures',setup(b){
+ export default {async fetch(request){setOwner(request.headers.get('x-fixture-owner'),request.headers.get('x-fixture-email')); control(request.headers);if(new URL(request.url).pathname==='/fixture')return Response.json(inspection());if(new URL(request.url).pathname==='/api/mcp')return mcp(request);if(new URL(request.url).pathname==='/api/webhooks/openai')return webhook(request);if(new URL(request.url).pathname==='/api/monitor-tick')return monitorTick(request);if(new URL(request.url).pathname.startsWith('/api/shared/'))return sharedReport(request);return ({GET,POST,PATCH,DELETE})[request.method](createTrackedAppRouteRequest(request).request);}};`},bundle:true,write:false,format:'esm',platform:'browser',external:['cloudflare:workers','node:*'],plugins:[{name:'workspace-fixtures',setup(b){
    b.onResolve({filter:/application-auth$|^fixture-identity$/},()=>({path:'identity',namespace:'fixture'}));
    b.onResolve({filter:/(^|\/)provider$|^fixture-provider$/},()=>({path:'provider',namespace:'fixture'}));
    b.onResolve({filter:/^@\//},args=>({path:path.resolve(args.path.replace(/^@\//,'')+'.ts')}));
    b.onLoad({filter:/.*/,namespace:'fixture'},args=>({contents:args.path==='identity'?`
-     let owner;export function setOwner(value){owner=value;}
-     export async function getApplicationUser(){return owner?{owner,name:'Fixture',email:'fixture@example.com',authSource:'signalforge'}:null;}`:`
+     let owner,email;export function setOwner(value,address){owner=value;email=address;}
+     export async function getApplicationUser(){return owner?{owner,userId:owner,name:'Fixture',email:email||'fixture@example.com',authSource:'signalforge'}:null;}`:`
      const responses=new Map();let fail=false;let hold=false;let terminal='completed';let serial=0;let lastInput='';export function inspection(){return {input:lastInput,calls:serial};}
      export function control(headers){fail=headers.get('x-fixture-fail')==='true';hold=headers.get('x-fixture-hold')==='true';terminal=headers.get('x-fixture-terminal')||'completed';}
      export function backgroundReady(){return true;}export function config(){return {key:'fixture-only',model:'fixture-model'};}
@@ -607,10 +608,10 @@ test('Library favorite changes apply beyond the initial preview and remain owner
  const foreign=await call('/report-library?'+new URLSearchParams({owner:f.owner}),'GET',undefined,'foreign-library-owner');assert.equal(foreign.value.total,1);assert.equal(foreign.value.items[0].id,'foreign-library');
  assert.equal((await call('/report-library','GET',undefined,'')).status,401);
 });
-test('Report library endpoint preserves the legacy read-only developer-key contract',async()=>{
+test('Developer report library adds pagination while preserving the legacy report-list array contract',async()=>{
  const f=await libraryFixture(),key=await call('/keys','POST',{name:'Library read contract'},f.owner);
  const token=key.value.token;assert.ok(token);
- assert.equal((await call('/report-library','GET',undefined,'',{Authorization:'Bearer '+token})).status,403);
+ const page=await call('/report-library','GET',undefined,'',{Authorization:'Bearer '+token});assert.equal(page.status,200);assert.equal(page.value.items.length,20);assert.equal(page.value.total,132);assert.ok(page.value.nextCursor);assert.ok(!Object.hasOwn(page.value.items[0],'body'));
  const list=await call('/reports','GET',undefined,'',{Authorization:'Bearer '+token});assert.equal(list.status,200);assert.ok(Array.isArray(list.value));assert.equal(list.value.length,100);
 });
 
@@ -772,4 +773,105 @@ test('Deleting a brand detaches manual rule associations while retaining capture
  assert.equal((await call('/profiles/'+p.id,'DELETE',undefined,owner)).status,200);
  const row=await db.prepare('SELECT * FROM monitors WHERE id=?').bind(rule.id).first();assert.equal(row.enabled,0);assert.equal(JSON.parse(row.input).profileId,undefined);assert.equal(JSON.parse(row.input).context,'Captured supplied context');
  assert.equal((await call('','GET',undefined,owner)).value.preferences.selected_profile_id,null);
+});
+
+test('Brand history is append-only, conflict-safe, owner-scoped and restore refreshes the managed rule without touching saved research',async()=>{
+ const owner='brand-history';await call('/monitors/all-brands','POST',{enabled:true},owner);const p=(await call('/profiles','POST',{name:'Original',context:'Old context'},owner)).value;
+ const rule=await db.prepare('SELECT * FROM monitors WHERE owner=? AND managed_profile_id=?').bind(owner,p.id).first();await call('/monitors/'+rule.id,'PATCH',{enabled:false},owner);
+ assert.equal((await call('/profiles/'+p.id,'PATCH',{...p,name:'Edited',expectedRevision:1},owner)).status,200);
+ assert.equal((await call('/profiles/'+p.id,'PATCH',{...p,name:'Stale',expectedRevision:1},owner)).status,409);
+ let history=await call('/profiles/'+p.id+'/history','GET',undefined,owner);assert.equal(history.value.items.length,1);assert.equal(history.value.items[0].data.name,'Original');
+ assert.equal((await call('/profiles/'+p.id+'/history','GET',undefined,'other-owner')).status,404);
+ assert.equal((await call('/profiles/'+p.id+'/restore','POST',{revision:1,expectedRevision:2},owner)).value.revision,3);
+ assert.equal((await call('/profiles/'+p.id,'GET',undefined,owner)).value.name,'Original');
+ history=await call('/profiles/'+p.id+'/history','GET',undefined,owner);assert.deepEqual(history.value.items.map(v=>v.revision),[2,1]);
+ const after=await db.prepare('SELECT * FROM monitors WHERE id=?').bind(rule.id).first();assert.equal(after.enabled,0);assert.equal(after.next_run,rule.next_run);assert.equal(JSON.parse(after.input).subject,'Original');
+ assert.equal((await call('/profiles/'+p.id+'/restore','POST',{revision:1,expectedRevision:2},owner)).status,409);
+ await call('/profiles/'+p.id,'DELETE',undefined,owner);assert.equal((await db.prepare('SELECT count(*) AS n FROM profile_versions WHERE profile_id=?').bind(p.id).first()).n,0);
+});
+test('Monitoring schedule edits preserve pause/history and reject stale, leased, invalid and cross-owner changes',async()=>{
+ const owner='schedule-api',r=(await call('/monitors','POST',{name:'Local schedule',input:inputs,cadence:'weekly'},owner)).value;
+ await call('/monitors/'+r.id,'PATCH',{enabled:false},owner);const schedule={timezone:'Asia/Kolkata',hour:9,minute:0,weekday:1,monthday:31};
+ const update={schedule,cadence:'monthly',expectedNextRun:r.next_run};const result=await call('/monitors/'+r.id+'/schedule','PATCH',update,owner);assert.equal(result.status,200);assert.equal(result.value.enabled,0);assert.equal(result.value.last_report,null);assert.equal(JSON.parse(result.value.schedule).timezone,'Asia/Kolkata');assert.ok(result.value.next_run>new Date().toISOString());
+ assert.equal((await call('/monitors/'+r.id+'/schedule','PATCH',update,owner)).status,409);
+ assert.equal((await call('/monitors/'+r.id+'/schedule','PATCH',{...update,schedule:{...schedule,hour:25}},owner)).status,400);
+ assert.equal((await call('/monitors/'+r.id+'/schedule','PATCH',update,'other-owner')).status,404);
+ await db.prepare('UPDATE monitors SET lease_until=? WHERE id=?').bind(new Date(Date.now()+120000).toISOString(),r.id).run();assert.equal((await call('/monitors/'+r.id+'/schedule','PATCH',{...update,expectedNextRun:result.value.next_run},owner)).status,409);
+});
+async function teamFixture(){const owner='team-owner-'+crypto.randomUUID(),editor='team-editor-'+crypto.randomUUID(),viewer='team-viewer-'+crypto.randomUUID();const workspace=(await call('/teams','POST',{name:'QA Team'},owner)).value.id;assert.ok(workspace);const cookie={Cookie:'sf_workspace='+workspace};async function invite(user,role){const email=user+'@example.com',i=await call('/teams/'+workspace+'/invites','POST',{email,role},owner);assert.equal(i.status,200);const accepted=await call('/teams/accept','POST',{token:i.value.token},user,{'x-fixture-email':email});assert.equal(accepted.status,200);return i.value;}await invite(editor,'editor');await invite(viewer,'viewer');return {owner,editor,viewer,workspace,cookie,invite};}
+test('Team invitations bind to verified actor email, store hashes only, expire/revoke safely and preserve personal isolation',async()=>{
+ const f=await teamFixture();const i=await call('/teams/'+f.workspace+'/invites','POST',{email:'target@example.com',role:'viewer'},f.owner);assert.equal((await call('/teams/accept','POST',{token:i.value.token},'wrong',{'x-fixture-email':'wrong@example.com'})).status,403);
+ const row=await db.prepare('SELECT * FROM team_invites WHERE id=?').bind(i.value.id).first();assert.notEqual(row.digest,i.value.token);assert.equal(row.state,'pending');assert.equal((await call('/teams/'+f.workspace,'GET',undefined,'outsider')).status,403);
+ await call('/teams/'+f.workspace+'/invites/'+i.value.id,'DELETE',undefined,f.owner);assert.equal((await call('/teams/accept','POST',{token:i.value.token},'target',{'x-fixture-email':'target@example.com'})).status,403);
+ const personal=(await call('/profiles','POST',{name:'PRIVATE PERSONAL'},f.owner)).value;const shared=(await call('/profiles','POST',{name:'SHARED TEAM'},f.editor,f.cookie)).value;
+ assert.equal((await call('/profiles/'+personal.id,'GET',undefined,f.viewer,f.cookie)).status,404);assert.equal((await call('/profiles/'+shared.id,'GET',undefined,f.owner)).status,404);assert.equal((await call('/profiles/'+shared.id,'GET',undefined,f.viewer,f.cookie)).status,200);
+ const selection=await call('/teams/select','POST',{workspaceId:f.workspace},f.viewer);assert.equal(selection.status,200);assert.equal((await call('/teams/select','POST',{workspaceId:f.workspace},'outsider')).status,403);
+ const inspect=JSON.stringify((await call('/teams/'+f.workspace,'GET',undefined,f.viewer)).value);assert.doesNotMatch(inspect,/digest|token|target@example.com/);
+});
+test('Viewer writes fail server-side, editors cannot manage access and removal invalidates subsequent reads/writes',async()=>{
+ const f=await teamFixture();const p=(await call('/profiles','POST',{name:'Team evidence'},f.owner,f.cookie)).value;
+ for(const[endpoint,method,payload]of [['/profiles','POST',{name:'Illegal'}],['/reports','POST',inputs],['/brand-view','POST',{profileId:p.id}],['/profiles/'+p.id,'DELETE',undefined],['/attachments','POST',{}]])assert.equal((await call(endpoint,method,payload,f.viewer,f.cookie)).status,403,endpoint);
+ assert.equal((await call('/teams/'+f.workspace+'/invites','POST',{email:'victim@example.com',role:'editor'},f.editor)).status,403);
+ assert.equal((await call('/preferences','POST',{name:'Hijack'},f.editor,f.cookie)).status,403);
+ const m=await db.prepare('SELECT id FROM team_members WHERE workspace_id=? AND user_id=?').bind(f.workspace,f.editor).first();await call('/teams/'+f.workspace+'/members/'+m.id,'DELETE',undefined,f.owner);
+ assert.equal((await call('/profiles/'+p.id,'GET',undefined,f.editor,f.cookie)).status,403);assert.equal((await call('/profiles','POST',{name:'No access'},f.editor,f.cookie)).status,403);assert.equal((await call('/teams/select','POST',{workspaceId:''},f.editor,f.cookie)).status,200);
+ assert.equal((await call('/teams/'+f.workspace+'/invites','POST',{email:'x@example.com',role:'owner'},f.owner)).status,400);
+});
+test('Team conversations support own/all creator filtering, and role demotion takes effect without a new session',async()=>{
+ const f=await teamFixture();const a=(await call('/conversations','POST',{requestId:crypto.randomUUID(),title:'Owner conversation'},f.owner,f.cookie)).value,b=(await call('/conversations','POST',{requestId:crypto.randomUUID(),title:'Editor conversation'},f.editor,f.cookie)).value;
+ assert.equal((await call('/conversations?visibility=all','GET',undefined,f.viewer,f.cookie)).value.items.length,2);assert.deepEqual((await call('/conversations?visibility=mine','GET',undefined,f.editor,f.cookie)).value.items.map(r=>r.id),[b.id]);assert.equal((await call('/conversations/'+a.id,'GET',undefined,f.editor)).status,404);
+ const m=await db.prepare('SELECT id FROM team_members WHERE workspace_id=? AND user_id=?').bind(f.workspace,f.editor).first();await call('/teams/'+f.workspace+'/members/'+m.id,'PATCH',{role:'viewer'},f.owner);assert.equal((await call('/conversations/'+b.id,'PATCH',{title:'Denied'},f.editor,f.cookie)).status,403);
+});
+
+test('Full workflow history reaches old same-date runs beyond the bootstrap and filters by owned brand/project',async()=>{
+ const owner='full-run-history',profile=(await call('/profiles','POST',{name:'History Brand'},owner)).value.id,project=(await call('/projects','POST',{name:'History Project',profileId:profile},owner)).value.id;
+ for(let i=0;i<45;i++)await db.prepare("INSERT INTO workflow_runs (id,owner,name,input,steps,status,project_id,profile_id,created,updated) VALUES (?,?,?,?,?,'completed',?,?,?,?)").bind('historic-run-'+i,owner,'History '+i,JSON.stringify(inputs),'[]',project,profile,'2026-01-01T00:00:00.000Z','2026-01-01T00:00:00.000Z').run();
+ const ids=[];let before='';do{const r=await call('/workflow-history?'+new URLSearchParams({project,brand:profile,before,q:'History'}),'GET',undefined,owner);assert.equal(r.status,200);ids.push(...r.value.items.map(r=>r.id));before=r.value.nextCursor;}while(before);assert.equal(ids.length,45);assert.equal(new Set(ids).size,45);assert.equal((await call('/workflow-history?project='+project,'GET',undefined,'other')).value.items.length,0);
+});
+test('Complete pitch revision restore recovers saved brief and agency, legacy revisions are explicit, old approvals do not apply to new revisions',async()=>{
+ const owner='pitch-complete-history',agency=(await call('/agencies','POST',{name:'Original agency',credentials:'Original credentials',proof:'Supplied proof',constraints:''},owner)).value;
+ const created=await call('/pitches','POST',{requestId:crypto.randomUUID(),input:{name:'Restorable pitch',client:'Client',market:'India',brief:'Original intake',agencyId:agency.id}},owner);assert.equal(created.status,201);let p=created.value;const initial=p.versions[0].id;
+ p=(await call('/pitches/'+p.id,'PATCH',{expectedRevision:1,input:{...p.input,brief:'Changed intake'},body:'Changed playbook'},owner)).value;
+ assert.equal((await call('/pitches/'+p.id+'/reviews','POST',{expectedRevision:p.revision,body:'Approved with source review still required.',decision:'approved'},owner)).status,200);
+ p=(await call('/pitches/'+p.id+'/restore','POST',{versionId:initial,expectedRevision:2,allContext:true},owner)).value;assert.equal(p.input.brief,'Original intake');assert.equal(p.agency.credentials,'Original credentials');assert.equal(p.revision,3);
+ const reviews=await call('/pitches/'+p.id+'/reviews','GET',undefined,owner);assert.equal(reviews.value.items[0].revision,2);
+ assert.equal((await call('/pitches/'+p.id+'/reviews','POST',{expectedRevision:2,body:'Stale approval',decision:'approved'},owner)).status,409);
+ assert.equal((await call('/pitches/'+p.id+'/reviews','GET',undefined,'intruder')).status,404);
+ await db.prepare('UPDATE pitch_versions SET context_snapshot=NULL WHERE id=?').bind(initial).run();assert.equal((await call('/pitches/'+p.id+'/restore','POST',{versionId:initial,expectedRevision:3,allContext:true},owner)).status,400);
+ assert.equal((await call('/pitches/'+p.id+'/restore','POST',{versionId:initial,expectedRevision:3},owner)).status,200);
+ const history=await call('/pitches/'+p.id+'/history?before=3','GET',undefined,owner);assert.deepEqual(history.value.items.map(v=>v.revision),[2,1]);
+});
+test('Only team owners can approve pitches; editors can comment, viewers can read, and members from other workspaces cannot see review content',async()=>{
+ const f=await teamFixture(),p=(await call('/pitches','POST',{requestId:crypto.randomUUID(),input:{name:'Team pitch',client:'Client',brief:'Brief',market:'India'}},f.editor,f.cookie)).value;assert.ok(p.id);
+ const review={expectedRevision:1,decision:'approved',body:'Internal decision only'};assert.equal((await call('/pitches/'+p.id+'/reviews','POST',review,f.editor,f.cookie)).status,403);assert.equal((await call('/pitches/'+p.id+'/reviews','POST',{...review,decision:'comment'},f.editor,f.cookie)).status,200);assert.equal((await call('/pitches/'+p.id+'/reviews','POST',{...review,decision:'comment'},f.viewer,f.cookie)).status,403);assert.equal((await call('/pitches/'+p.id+'/reviews','POST',review,f.owner,f.cookie)).status,200);assert.equal((await call('/pitches/'+p.id+'/reviews','GET',undefined,f.viewer,f.cookie)).value.items.length,2);assert.equal((await call('/pitches/'+p.id+'/reviews','GET',undefined,f.viewer)).status,404);
+});
+
+test('Read-only API keys enforce endpoint scopes, expiry, revocation and atomic per-minute request budgets',async()=>{
+ const owner='api-scopes';const reportKey=await call('/keys','POST',{name:'Reports only',scopes:['reports'],expiresDays:7},owner);assert.equal(reportKey.status,201);const headers={Authorization:'Bearer '+reportKey.value.token};assert.equal((await call('/profiles','GET',undefined,'',headers)).status,403);assert.equal((await call('/report-library','GET',undefined,'',headers)).status,200);assert.equal((await call('/reports','POST',inputs,'',headers)).status,403);
+ const minute=Math.floor(Date.now()/60000);await db.prepare('INSERT INTO api_key_usage (id,key_id,minute,count) VALUES (?,?,?,60) ON CONFLICT(id) DO UPDATE SET count=60').bind(reportKey.value.id+':'+minute,reportKey.value.id,minute).run();assert.equal((await call('/reports','GET',undefined,'',headers)).status,429);
+ await db.prepare('DELETE FROM api_key_usage WHERE key_id=?').bind(reportKey.value.id).run();await db.prepare('UPDATE api_keys SET expires=? WHERE id=?').bind('2020-01-01T00:00:00.000Z',reportKey.value.id).run();assert.equal((await call('/reports','GET',undefined,'',headers)).status,401);
+ const profileKey=(await call('/keys','POST',{name:'Profiles only',scopes:['profiles'],expiresDays:30},owner)).value;assert.equal((await call('/profiles','GET',undefined,'',{Authorization:'Bearer '+profileKey.token})).status,200);assert.equal((await call('/reports','GET',undefined,'',{Authorization:'Bearer '+profileKey.token})).status,403);await call('/keys/'+profileKey.id,'DELETE',undefined,owner);assert.equal((await call('/profiles','GET',undefined,'',{Authorization:'Bearer '+profileKey.token})).status,401);
+ for(const options of [{scopes:[]},{scopes:['admin']},{scopes:['reports','reports']},{expiresDays:0},{expiresDays:'90'}])assert.equal((await call('/keys','POST',{name:'Invalid',...options},'invalid-api-key')).status,400);
+ const data=(await call('','GET',undefined,owner)).value;assert.ok(data.keys.some(k=>k.expires));assert.ok(data.keys.every(k=>!Object.hasOwn(k,'digest')&&!Object.hasOwn(k,'token')));
+});
+test('MCP full report search is paginated and obeys the same key scopes without provider calls',async()=>{
+ const owner='mcp-search',key=(await call('/keys','POST',{name:'MCP reports',scopes:['reports']},owner)).value;
+ async function rpc(method,params){const response=await runtime.dispatchFetch(origin+'/api/mcp',{method:'POST',headers:{Authorization:'Bearer '+key.token,'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})});return {status:response.status,value:await response.json()};}
+ const tools=(await rpc('tools/list')).value.result.tools;assert.ok(tools.some(t=>t.name==='search_reports'));assert.ok(!tools.some(t=>t.name==='list_profiles'));const result=await rpc('tools/call',{name:'search_reports',arguments:{q:'No result'}});assert.equal(result.status,200);assert.equal(JSON.parse(result.value.result.content[0].text).items.length,0);assert.equal((await rpc('tools/call',{name:'list_profiles'})).status,403);
+});
+
+test('Reissued invitations invalidate older links and member removal revokes every pending invitation for that identity',async()=>{
+ const owner='invite-removal-owner',user='invite-removal-user',email='invited-removal@example.com',workspace=(await call('/teams','POST',{name:'Removal regression'},owner)).value.id;
+ const a=(await call('/teams/'+workspace+'/invites','POST',{email,role:'viewer'},owner)).value,b=(await call('/teams/'+workspace+'/invites','POST',{email,role:'editor'},owner)).value;
+ assert.equal((await call('/teams/accept','POST',{token:a.token},user,{'x-fixture-email':email})).status,403);
+ assert.equal((await call('/teams/accept','POST',{token:b.token},user,{'x-fixture-email':email})).status,200);
+ const c=(await call('/teams/'+workspace+'/invites','POST',{email,role:'editor'},owner)).value;
+ const m=await db.prepare('SELECT id,email FROM team_members WHERE workspace_id=? AND user_id=?').bind(workspace,user).first();assert.equal(m.email,email);
+ await call('/teams/'+workspace+'/members/'+m.id,'DELETE',undefined,owner);
+ assert.equal((await call('/teams/accept','POST',{token:c.token},user,{'x-fixture-email':email})).status,403);assert.equal((await call('/profiles','GET',undefined,user,{Cookie:'sf_workspace='+workspace})).status,403);
+});
+test('Workspace count limit also applies atomically when joining an invitation',async()=>{
+ const user='team-limit-user',email='limit-user@example.com';for(let i=0;i<10;i++)assert.equal((await call('/teams','POST',{name:'Limit '+i},user)).status,200);assert.equal((await call('/teams','POST',{name:'Over limit'},user)).status,400);
+ const workspace=(await call('/teams','POST',{name:'Other workspace'},'team-limit-owner')).value.id,invite=(await call('/teams/'+workspace+'/invites','POST',{email,role:'viewer'},'team-limit-owner')).value;
+ assert.equal((await call('/teams/accept','POST',{token:invite.token},user,{'x-fixture-email':email})).status,403);assert.equal((await db.prepare('SELECT count(*) AS n FROM team_members WHERE user_id=?').bind(user).first()).n,10);
 });

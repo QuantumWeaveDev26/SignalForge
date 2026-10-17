@@ -32,8 +32,8 @@
         "navigationScreenshot"
       ],
       "status": "partial",
-      "current": "Editable owner-scoped brand/topic profiles with revision-checked saves, safe website links, search and a saved brand workspace. The workspace counts all explicitly associated reports, projects, active/archived files, saved workflows and conversations, and previews latest 10 reports/projects/active files. It opens the full brand-filtered report library, files and workflows, starts a brand-prefilled chat or research brief, and exposes the automatic weekly India rule/history. Edits atomically refresh an existing automatic rule while preserving pause/schedule/history. Existing research and chat/workflow/pitch snapshots remain unchanged; new chats capture the current website and revision. A persistent owner-scoped Brand view now filters associated workspace lists and supplies defaults for new work. D1 preferences survive reload/device changes; explicit URL scope/legacy links override the default. Identity-based associations keep same-name brands separate and unassociated legacy items in All brands. Open drafts, saved inputs and direct record views retain context; deleting a brand clears the selection.",
-      "gap": "Team collaboration and brand revision-history restoration remain pending. A brand view does not grant team permissions; already-open tabs update on reload. Existing workflows/manual monitors retain captured input text until explicitly edited, with deleted profile associations detached.",
+      "current": "Editable owner-scoped brand/topic profiles with revision-checked saves, safe website links, search and a saved brand workspace. The workspace counts all explicitly associated reports, projects, active/archived files, saved workflows and conversations, and previews latest 10 reports/projects/active files. It opens the full brand-filtered report library, files and workflows, starts a brand-prefilled chat or research brief, and exposes the automatic weekly India rule/history. Edits atomically refresh an existing automatic rule while preserving pause/schedule/history. Existing research and chat/workflow/pitch snapshots remain unchanged; new chats capture the current website and revision. A persistent owner-scoped Brand view now filters associated workspace lists and supplies defaults for new work. D1 preferences survive reload/device changes; explicit URL scope/legacy links override the default. Identity-based associations keep same-name brands separate and unassociated legacy items in All brands. Open drafts, saved inputs and direct record views retain context; deleting a brand clears the selection. Prior context is archived on successful edits; paginated history and CAS-checked restore create a new revision without rewriting saved research.",
+      "gap": "Pre-activation context history is unavailable. Brand view is a filter/default; workspace membership controls shared access.",
       "acceptance": [
         "Switching brands scopes all related content consistently.",
         "Reloading preserves the selection and unauthorized users cannot read another owner's records."
@@ -48,8 +48,8 @@
         "strategy"
       ],
       "status": "partial",
-      "current": "Brand/project-scoped independent chat with immutable brand and hypothetical persona snapshots, per-answer Strategy/Research agent choice, supported context files, cited background answers and bounded recent-turn memory. Saved conversations support search, favorites, older-chat pagination, rename/delete confirmation, retry/cancel, older-message pagination beyond 100 turns, source-aware copying and full Markdown export. Creation and send retries preserve request identity.",
-      "gap": "Shared team My/All visibility, voice input and specialist social/ad datasets remain incomplete. Persona perspectives are simulated hypotheses, not representative research.",
+      "current": "Brand/project-scoped independent chat with immutable brand and hypothetical persona snapshots, per-answer Strategy/Research agent choice, supported context files, cited background answers and bounded recent-turn memory. Saved conversations support search, favorites, older-chat pagination, rename/delete confirmation, retry/cancel, older-message pagination beyond 100 turns, source-aware copying and full Markdown export. Creation and send retries preserve request identity. Team workspaces share chats with My/All creator filters. Browser-supported dictation fills reviewable text without auto-send and stops on navigation.",
+      "gap": "Specialist datasets remain unavailable. Browser speech support/privacy varies; My is a creator filter, not private team visibility.",
       "acceptance": [
         "Create, reopen and search a brand-scoped conversation with saved context.",
         "My/All views respect membership and visibility permissions, including paginated older conversations."
@@ -63,8 +63,8 @@
         "workflowsScreenshot"
       ],
       "status": "partial",
-      "current": "Nine catalog cards with filters/favorites, five runnable open-web presets and four explicitly unavailable provider-dependent presets. Editable templates retain owned brand/project/file defaults, briefs, audience, competitors and time windows; support customization, duplication and step reordering. Runs snapshot inputs/steps, preserve report attempts, hand prior findings/sources forward, export combined output and rerun the saved configuration. Review mode or continuous progression with signed-webhook background execution, including when the page is closed; errors and partial results pause. Idempotent creation and expected-step/report guards protect against delayed duplicate launches.",
-      "gap": "Specialist social/ad workflows require authorized provider connections. Richer reference workflow behavior has not been independently exercised.",
+      "current": "Nine catalog cards with filters/favorites, five runnable open-web presets and four explicitly unavailable provider-dependent presets. Editable templates retain owned brand/project/file defaults, briefs, audience, competitors and time windows; support customization, duplication and step reordering. Runs snapshot inputs/steps, preserve report attempts, hand prior findings/sources forward, export combined output and rerun the saved configuration. Review mode or continuous progression with signed-webhook background execution, including when the page is closed; errors and partial results pause. Idempotent creation and expected-step/report guards protect against delayed duplicate launches. Full keyset-paginated run history reaches older work beyond the latest-100 preview.",
+      "gap": "Specialist social/ad presets require provider access; richer private Waldo behavior remains unverified.",
       "acceptance": [
         "A workflow accepts saved inputs, executes defined steps, persists progress and exposes retryable failures.",
         "Users can create, save, reopen, search and favorite workflows; a template button alone does not satisfy execution."
@@ -78,8 +78,8 @@
         "projectsScreenshot"
       ],
       "status": "partial",
-      "current": "Owner-scoped project create/edit/search/remove, optional brand association, linked reports and workflow runs. Removing a project retains reports and run history. Project/brand-associated context files are organized through the Files library; deleting a project detaches files without deleting them.",
-      "gap": "Team visibility/owners and scheduled project filters remain incomplete.",
+      "current": "Owner-scoped project create/edit/search/remove, optional brand association, linked reports and workflow runs. Removing a project retains reports and run history. Project/brand-associated context files are organized through the Files library; deleting a project detaches files without deleting them. Team workspaces share projects. Full library links and paginated workflow history reach older work; creation-date and explicitly linked enabled-monitor filters are available.",
+      "gap": "Per-project access overrides and recurring multi-step project execution remain unimplemented/unverified reference behavior. Membership is workspace-wide.",
       "acceptance": [
         "Create and reopen a project containing linked research and files.",
         "Search and reference filters return matching records; visibility is enforced server-side."
@@ -94,8 +94,8 @@
         "pitch"
       ],
       "status": "partial",
-      "current": "Organized Files library: PDF text (up to 50 pages), DOCX main-body text, UTF-8 TXT/CSV/Markdown. Files up to 5 MB and 100,000 extracted characters; previews, original downloads, project/brand association, rename, archive/restore. Up to three files share a 30,000-character context budget with explicit omissions and page/paragraph/line attribution. Owner checks and legacy text uploads are preserved.",
-      "gap": "PPTX, XLSX, image/chart interpretation and scanned-document OCR. DOCX headers, footnotes, comments and visual layout are not extracted.",
+      "current": "Organized Files library: PDF text (up to 50 pages), DOCX main-body text, UTF-8 TXT/CSV/Markdown. Files up to 5 MB and 100,000 extracted characters; previews, original downloads, project/brand association, rename, archive/restore. Up to three files share a 30,000-character context budget with explicit omissions and page/paragraph/line attribution. Owner checks and legacy text uploads are preserved. PPTX preserves declared slide order with slide references. XLSX extracts visible sheet/cell text and saved formula values without recalculation. DOCX includes separately attributed headers, footers, footnotes, endnotes and comments under bounded limits.",
+      "gap": "OCR/scanned PDFs and image/chart interpretation remain unavailable. Spreadsheet dates/number formats/formulas are not evaluated. Permanent retention cleanup is not added.",
       "acceptance": [
         "Each supported format is parsed with traceable file/page references; unsupported or unreadable inputs show explicit errors.",
         "Project/brand file selection preserves ownership and existing text uploads."
@@ -109,8 +109,8 @@
         "libraryScreenshot"
       ],
       "status": "partial",
-      "current": "Saved sourced reports with full-account server-side title/subject/question search and combined favorites, exact labels, project/brand/type/status/date filters. Metadata-only keyset pagination reaches reports beyond the latest-100 workspace preview, including stable tied timestamps. Grid/list views share the same query, with filter/view state retained in the URL across opening reports and reloading. Full account report/completed counts are distinct from bounded overview previews. Existing organization, Markdown export, printing and revocable links are preserved. Completed and partial reports with saved text export editable DOCX including status, question, market, date, body, numbered clickable citations and a full source appendix. Existing Markdown and Print/PDF remain available.",
-      "gap": "Requester/team filters and author collaboration remain incomplete. The legacy read-only developer report-list API still returns its existing latest-100 array.",
+      "current": "Saved sourced reports with full-account server-side title/subject/question search and combined favorites, exact labels, project/brand/type/status/date filters. Metadata-only keyset pagination reaches reports beyond the latest-100 workspace preview, including stable tied timestamps. Grid/list views share the same query, with filter/view state retained in the URL across opening reports and reloading. Full account report/completed counts are distinct from bounded overview previews. Existing organization, Markdown export, printing and revocable links are preserved. Completed and partial reports with saved text export editable DOCX including status, question, market, date, body, numbered clickable citations and a full source appendix. Existing Markdown and Print/PDF remain available. Team membership shares the existing library. Saved reports export full editable PowerPoint text slides with sources; developer keys can read the full metadata library page.",
+      "gap": "Per-author requester filters and per-record permissions remain pending. Legacy developer list arrays retain compatibility bounds.",
       "acceptance": [
         "Favorites and labels persist; combined filters produce correct accessible results.",
         "Grid/list views open the same report and preserve filter state."
@@ -198,8 +198,8 @@
         "pitch"
       ],
       "status": "partial",
-      "current": "Dedicated Pitch workspace saves structured RFP/client intake and agency credential snapshots, references owned context files, creates an editable manual playbook, launches cited research through the existing one-step background workflow engine, explicitly imports completed research, retains append-only playbook/source revisions with conflict checks and restore, and exports saved Markdown. Intake records, agency profiles and pitches support private ownership; agency profiles and pitches can be archived/restored. Each research run consumes the existing report allowance. Saved pitch playbooks export editable DOCX with saved revision, intake, supplied agency snapshot, body, clickable source links and limitations; unsaved edits disable export.",
-      "gap": "Team review/approval, structured stakeholder collaboration and presentation exports. External ad/social/panel evidence still requires provider access. Human edits need source verification; revision restore covers playbook/source links, not historical intake or agency snapshots.",
+      "current": "Dedicated Pitch workspace saves structured RFP/client intake and agency credential snapshots, references owned context files, creates an editable manual playbook, launches cited research through the existing one-step background workflow engine, explicitly imports completed research, retains append-only playbook/source revisions with conflict checks and restore, and exports saved Markdown. Intake records, agency profiles and pitches support private ownership; agency profiles and pitches can be archived/restored. Each research run consumes the existing report allowance. Saved pitch playbooks export editable DOCX with saved revision, intake, supplied agency snapshot, body, clickable source links and limitations; unsaved edits disable export. Revision-specific internal comments and owner approvals/change requests, complete intake/agency snapshots on new revisions, optional full restore, older revision pagination and editable PowerPoint export are implemented.",
+      "gap": "Legacy revisions cannot reconstruct missing intake snapshots. External client portals, per-record access and automatic communications are not enabled. Specialist evidence requires providers.",
       "acceptance": [
         "A real brief plus agency credentials produces traceable requirements, uncertainties, distinct angles and sourced proof points.",
         "Users can revise and retain a playbook, follow up, and export/share it without losing evidence."
@@ -214,8 +214,8 @@
         "projectsScreenshot"
       ],
       "status": "partial",
-      "current": "Active hourly Google Cloud Scheduler in local-snow-508108-g3 calls the authenticated OIDC monitoring dispatcher. Daily/weekly/monthly rules, duplicate guards, retries and saved report history exist. A real Google-triggered QA report completed with four citations and one report after duplicate dispatch. QA rules are paused; all saved brands are configured for weekly India briefings, with no real business brands yet saved. Owner-scoped scan history paginates beyond 100 reports. New scans snapshot the earlier completed same-rule report at launch; comparable scopes receive a cited changes section within the existing provider call. Report detail compares normalized source URLs, links the earlier briefing and exports the comparison with the current report and citations. First/legacy/unfinished/changed-scope states are explicit; private baseline metadata is omitted from shared reports. Opt-in verified-account Gmail notifications now use a durable outbox on the hourly dispatcher, including completion, partial results, failures and prelaunch refusals. Test email, health checks, receipts, rejection retries and duplicate-risk manual recovery are visible in Monitoring.",
-      "gap": "Production-grade sender authorization/deliverability: the operator explicitly retained Gmail OAuth Testing and its potential seven-day refresh-token expiry. Branded exports, user-timezone scheduling and specialist dataset coverage remain pending. Legacy reports are not retroactively assigned a baseline.",
+      "current": "Active hourly Google Cloud Scheduler in local-snow-508108-g3 calls the authenticated OIDC monitoring dispatcher. Daily/weekly/monthly rules, duplicate guards, retries and saved report history exist. A real Google-triggered QA report completed with four citations and one report after duplicate dispatch. QA rules are paused; all saved brands are configured for weekly India briefings, with no real business brands yet saved. Owner-scoped scan history paginates beyond 100 reports. New scans snapshot the earlier completed same-rule report at launch; comparable scopes receive a cited changes section within the existing provider call. Report detail compares normalized source URLs, links the earlier briefing and exports the comparison with the current report and citations. First/legacy/unfinished/changed-scope states are explicit; private baseline metadata is omitted from shared reports. Opt-in verified-account Gmail notifications now use a durable outbox on the hourly dispatcher, including completion, partial results, failures and prelaunch refusals. Test email, health checks, receipts, rejection retries and duplicate-risk manual recovery are visible in Monitoring. Local-time IANA schedules support cadence/day/time, DST gaps/repeats and month-end clamping. CAS/lease guards preserve execution and pause/history; the hourly dispatcher remains unchanged.",
+      "gap": "Gmail OAuth remains Testing. Exact-minute delivery, team email fan-out and specialist datasets remain unavailable.",
       "dependencies": [
         "Verified scheduler, monitored execution, delivery mechanism and appropriate connected datasets."
       ],
@@ -235,8 +235,8 @@
         "build"
       ],
       "status": "partial",
-      "current": "Read-only owner-scoped API keys and MCP list_reports, get_report, list_profiles.",
-      "gap": "Provider-backed data discovery, raw/aggregate/analysis endpoints, metering and richer scoped access. Existing report access is not equivalent to Waldo/Adveron's data platform.",
+      "current": "Read-only owner-scoped API keys and MCP list_reports, get_report, list_profiles. Keys now have report/profile permissions, expiry, atomic60/min request budgets and24h counters. REST report-library and MCP search_reports expose full metadata pagination; legacy lists remain unchanged.",
+      "gap": "Licensed raw/aggregate/analysis feeds remain unavailable. Team keys are disabled. Revoke new scoped keys before any rollback to older authorization code.",
       "dependencies": [
         "Licensed data access, endpoint contracts, quotas and provider cost controls."
       ],
@@ -254,8 +254,8 @@
         "chatsScreenshot"
       ],
       "status": "partial",
-      "current": "Google/email-password authentication, owner-isolated records and account/usage controls. Approved INR/USD Solo and Pro plans have Razorpay checkout, verification, webhooks, cancellation and usage code, but test/live payment configuration is deliberately disabled because keys were deferred. No team membership model.",
-      "gap": "Multiple workspaces, invitations/roles and shared content permissions; merchant acceptance testing and activation after test/live configuration. Gmail sender OAuth remains in Testing.",
+      "current": "Google/email-password authentication, owner-isolated records and account/usage controls. Approved INR/USD Solo and Pro plans have Razorpay checkout, verification, webhooks, cancellation and usage code, but test/live payment configuration is deliberately disabled because keys were deferred. No team membership model. Separate team namespaces implement approved Owner/Editor/Viewer roles, hashed seven-day email-bound private invite links, immediate subsequent-request revocation, My/All team chat and active-session/device revocation. Reissue/removal invalidate outstanding invite links.",
+      "gap": "Team paid-plan sharing, notification delivery, ownership transfer, team deletion/retention administration and per-record privacy remain unavailable. Razorpay activation/testing and Gmail production authorization remain pending.",
       "dependencies": [
         "Confirmed SignalForge commercial terms, payment provider and transactional delivery."
       ],
@@ -273,7 +273,7 @@
     "Expand developer APIs, teams and commercial operations once access and terms are established."
   ],
   "verification": {
-    "releaseScope": "Editable Word DOCX exports of saved reports and pitch playbooks; current theme retained; full Waldo parity remains incomplete.",
+    "releaseScope": "Provider-free team collaboration, brand/pitch history, Office text ingestion, PowerPoint exports, voice input, local-time monitoring, sessions and scoped developer access. Full Waldo parity remains incomplete.",
     "evidence": [
       "Real saved chat with contextual follow-up and a three-step background workflow were verified in the preceding releases.",
       "Google Cloud Scheduler executed a real monitoring scan with cited saved output; duplicate dispatch produced one report.",
@@ -282,7 +282,8 @@
       "98 fixture/policy tests pass, including monitor ownership, baseline selection, scope changes, duplicate dispatch, pagination and shared-report isolation. Two real isolated provider scans completed with six and four cited sources; the second retained the first baseline and generated a comparison section.",
       "104 fixture/policy tests pass; six added Worker integration tests cover an older report beyond 100, combined/literal filters, tied-date pagination/new inserts, input validation, favorites/owner isolation and developer-key compatibility. Isolated actual Workspace browser QA reaches all 132 fictional reports, recovers after a simulated page failure, and preserves filters/view after report navigation and reload.",
       "110 fixture/policy tests pass. New checks cover concurrent brand CAS edits, ownership and read-only API boundaries, old/new chat context snapshots, unchanged report/workflow inputs, automatic-rule pause/schedule preservation, atomic rollback, all-report counts beyond 100, active/archived files and additive schema compatibility. Actual Workspace browser QA exercises stale-edit rejection with draft retention, reload locking, revised research prefill and brand-linked report/files/workflow/chat navigation.",
-      "Six Word export checks validate all OOXML package members and relationship targets, citations, unsafe links/XML, Unicode, tables/lists/code, partial-state disclosures, saved pitch revision/intake/agency/body and excluded private fields. Export uses the existing browser data without provider calls or a new server endpoint."
+      "Six Word export checks validate all OOXML package members and relationship targets, citations, unsafe links/XML, Unicode, tables/lists/code, partial-state disclosures, saved pitch revision/intake/agency/body and excluded private fields. Export uses the existing browser data without provider calls or a new server endpoint.",
+      "Provider-free release acceptance and QA/runtime limits: docs/provider-free-release-acceptance.json."
     ],
     "limits": [
       "Provider-dependent social/ad/audience datasets are not connected.",

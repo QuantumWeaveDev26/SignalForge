@@ -26,3 +26,7 @@ Keep the current SignalForge theme unless the user explicitly requests a design 
 ## Lockfile portability
 
 The missing optional @emnapi/core@1.10.0 and @emnapi/runtime@1.10.0 lock entries beneath @rolldown/binding-wasm32-wasi were first reconciled into canonical Sites source in version18 and restored again in version24 after a development-dependency update dropped them. The version24 lock passed an isolated npm11.19 Linux x64 clean-install dry run. The repository lockfile matches that published source. Preserve a complete cross-platform lockfile when changing dependencies and verify clean npm ci in CI.
+
+## Scoped-key rollback safety
+
+Version25 adds API-key permission scopes and expiry checks with append-only migrations0017–0024. Preserve added schema during a source rollback. Before reverting to version24 or earlier authorization code, revoke newly scoped/expiring keys or disable developer access: older code ignores the new permission and expiry fields. Never remap team namespaces into personal owner identifiers. Team invitations are private, email-bound links shared manually; no invitation email service was activated by this release.

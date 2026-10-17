@@ -8,7 +8,7 @@ import {pathToFileURL} from 'node:url';
 import {build} from 'esbuild';
 import {Window} from 'happy-dom';
 const win=new Window({url:'https://signalforge.test/workspace',settings:{disableJavaScriptEvaluation:true,disableCSSFileLoading:true,disableJavaScriptFileLoading:true}});
-for(const name of ['window','document','location','history','HTMLElement','HTMLInputElement','HTMLTextAreaElement','HTMLSelectElement','Node','Event','MouseEvent','PopStateEvent','MutationObserver','getComputedStyle','localStorage'])Object.defineProperty(globalThis,name,{configurable:true,writable:true,value:name==='window'?win:name==='getComputedStyle'?win.getComputedStyle.bind(win):win[name]});
+for(const name of ['window','document','location','history','HTMLElement','HTMLInputElement','HTMLTextAreaElement','HTMLSelectElement','Node','Event','MouseEvent','PopStateEvent','MutationObserver','getComputedStyle','localStorage','sessionStorage'])Object.defineProperty(globalThis,name,{configurable:true,writable:true,value:name==='window'?win:name==='getComputedStyle'?win.getComputedStyle.bind(win):win[name]});
 Object.defineProperty(globalThis,'navigator',{configurable:true,value:win.navigator});
 globalThis.addEventListener=win.addEventListener.bind(win);globalThis.removeEventListener=win.removeEventListener.bind(win);
 globalThis.matchMedia=win.matchMedia.bind(win);
@@ -35,6 +35,8 @@ globalThis.fetch=async(target,options={})=>{
  else if(route==='/conversations')data={items:[],nextOffset:null};
  else if(route==='/pitches')data=pitches;
  else if(route==='/agencies')data=[];
+ else if(route==='/teams')data={items:[{id:'qa-team',name:'QA Team',role:store.user.role||'owner'}]};
+ else if(route==='/teams/qa-team')data={workspace:{name:'QA Team'},members:[{id:'qa-member',name:'Colleague',email:'colleague@example.com',role:'viewer'}],invites:[]};
  else if(route==='/report-library'){const brand=url.searchParams.get('profileId')||url.searchParams.get('brand');const items=store.reports.filter(r=>!brand||r.profileId===brand);data={items,total:items.length,nextCursor:null,labels:[]};}
  else if(route==='/monitor-email')data={enabled:false,configured:false,sender:{state:'unchecked'},oauthTesting:true,items:[]};
  else if(route.startsWith('/reports/'))data=store.reports.find(r=>r.id===route.split('/')[2]);
@@ -124,3 +126,24 @@ test('Failed brand-preference writes retain the current view and remain retryabl
  assert.equal(field('Your research question').value,'Keep me through save failure');failBrandSave=false;await selectBrand('b');assert.equal(store.preferences.selected_profile_id,'b');assert.equal(field('Your research question').value,'Keep me through save failure');await unmount();
 });
 
+
+test('Browser voice dictation appends transcript without sending and cleans up recognition on navigation',async()=>{
+ let active,aborted=0;win.SpeechRecognition=class{start(){active=this;}stop(){this.onend?.();}abort(){aborted++;this.onend?.();}};
+ await mount();await click(buttons('Voice input')[0]);await click(buttons('Start dictation')[0]);assert.ok(active);await act(async()=>active.onresult({resultIndex:0,results:[Object.assign([{transcript:'Research Indian coffee demand'}],{isFinal:true})]}));await flush();assert.equal(win.document.querySelector('#conversation-question').value,'Research Indian coffee demand');assert.ok(!calls.some(c=>c.method==='POST'&&c.route.startsWith('/conversations')));await nav('Overview');assert.equal(aborted,1);delete win.SpeechRecognition;await unmount();
+});
+test('Viewer brand filtering changes only the URL scope and never sends a preference mutation',async()=>{
+ await mount();store.user.role='viewer';await click(win.document.querySelector('[aria-label="Refresh workspace"]'));await selectBrand('b');assert.equal(win.document.querySelector('[aria-label="Workspace brand view"]').value,'b');assert.ok(!calls.some(c=>c.route==='/brand-view'));assert.equal(store.preferences.selected_profile_id,'a');await unmount();
+});
+
+test('Actual team settings show owner invitation controls and hide them for a viewer',async()=>{
+ await mount();store.user.userId='qa-user';store.user.role='owner';await click(win.document.querySelector('[aria-label="Refresh workspace"]'));await nav('Workspace settings');assert.ok(win.document.body.textContent.includes('Team workspaces'));await click(buttons('Manage members')[0]);assert.ok(buttons('Create private invitation').length);assert.ok(field('Invite verified email'));await unmount();
+ await mount();store.user.userId='qa-user';store.user.role='viewer';store.user.workspaceId='qa-team';store.user.workspaceName='QA Team';await click(win.document.querySelector('[aria-label="Refresh workspace"]'));await nav('Workspace settings');await click(buttons('Manage members')[0]);assert.equal(buttons('Create private invitation').length,0);assert.equal(buttons('Remove member').length,0);assert.ok(win.document.body.textContent.includes('QA Team'));await unmount();
+});
+
+test('Project creation-date and enabled linked-monitor filters combine without treating brand-only rules as project schedules',async()=>{
+ await mount();store.projects[0].created='2025-01-01T00:00:00.000Z';store.projects[1].created='2026-10-17T00:00:00.000Z';store.monitors[0].enabled=1;store.monitors[0].input=JSON.stringify({...JSON.parse(store.monitors[0].input),projectId:'project-a'});store.monitors[1].enabled=1;await click(win.document.querySelector('[aria-label="Refresh workspace"]'));await selectBrand('');await nav('Projects');await change(field('Scheduled research','select'),'yes');assert.deepEqual([...win.document.querySelectorAll('.collection-card h3')].map(n=>n.textContent),['a project']);await change(field('Project created since'),'2026-01-01');assert.equal(win.document.querySelectorAll('.collection-card h3').length,0);await change(field('Scheduled research','select'),'no');assert.deepEqual([...win.document.querySelectorAll('.collection-card h3')].map(n=>n.textContent),['b project']);await unmount();
+});
+
+test('Monitoring schedule editor safely replaces an invalid legacy workspace timezone with UTC',async()=>{
+ await mount();store.preferences.timezone='legacy-invalid-timezone';await click(win.document.querySelector('[aria-label="Refresh workspace"]'));await nav('Monitoring');const details=[...win.document.querySelectorAll('details')].find(d=>d.querySelector('summary')?.textContent==='Local-time schedule');assert.ok(details);await act(async()=>{details.open=true;details.dispatchEvent(new win.Event('toggle'));});await flush();assert.equal(field('IANA timezone').value,'UTC');assert.ok(win.document.body.textContent.includes('(UTC)'));await unmount();
+});

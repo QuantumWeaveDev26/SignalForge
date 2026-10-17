@@ -7,25 +7,25 @@ import {chatMode,personaContext} from './conversation-policy';
 
 export const activeTurn=(status:string)=>['starting','queued','in_progress'].includes(status);
 export function publicTurn(row:any){return {id:row.id,question:row.question,body:row.body,status:row.status,mode:row.mode||'strategy',sources:JSON.parse(row.sources),attachments:JSON.parse(row.attachments),error:row.error,created:row.created};}
-export async function createConversation(owner:string,value:any){
+export async function createConversation(owner:string,value:any,creator:string|null=null){
  const {profileId,projectId}=await associations(value,owner);
  const profile=profileId?await owned('profiles',profileId,owner):null;
  const mode=chatMode(value.mode),persona=personaContext(value.persona);
  const conversationId=reference(value.requestId,'Request ID')||id(),time=now();
  const previous=await one('SELECT owner FROM conversations WHERE id=?',conversationId);
  if(previous){if(previous.owner!==owner)throw new AppError('This request ID is already in use.',409);return conversationState(conversationId,owner,false);}
- const inserted=await run('INSERT OR IGNORE INTO conversations (id,owner,title,profile_id,project_id,persona,mode,context,created,updated) SELECT ?,?,?,?,?,?,?,?,?,? WHERE (SELECT count(*) FROM conversations WHERE owner=?)<500',conversationId,owner,bounded(value.title,'Conversation title',200)||'New conversation',profileId,projectId,JSON.stringify(persona),mode,JSON.stringify(profile?{name:profile.name,website:profile.website,revision:profile.revision,market:profile.market,audience:profile.audience,competitors:profile.competitors,context:profile.context}:{}),time,time,owner);
+ const inserted=await run('INSERT OR IGNORE INTO conversations (id,owner,title,profile_id,project_id,persona,mode,context,created,updated,created_by) SELECT ?,?,?,?,?,?,?,?,?,?,? WHERE (SELECT count(*) FROM conversations WHERE owner=?)<500',conversationId,owner,bounded(value.title,'Conversation title',200)||'New conversation',profileId,projectId,JSON.stringify(persona),mode,JSON.stringify(profile?{name:profile.name,website:profile.website,revision:profile.revision,market:profile.market,audience:profile.audience,competitors:profile.competitors,context:profile.context}:{}),time,time,creator,owner);
  if(!inserted.meta.changes){const existing=await one('SELECT owner FROM conversations WHERE id=?',conversationId);if(existing?.owner===owner)return conversationState(conversationId,owner,false);}
  if(!inserted.meta.changes)throw new AppError('This workspace supports up to 500 conversations. Remove an older conversation to create another.');
  return conversationState(conversationId,owner,false);
 }
-export async function listConversations(owner:string,params:URLSearchParams){
+export async function listConversations(owner:string,params:URLSearchParams,creator?:string){
  const query=bounded(params.get('q'),'Search',200);
  const profileId=reference(params.get('brand'),'Brand');
  const projectId=reference(params.get('project'),'Project');
  const offset=Number(params.get('offset')||0);if(!Number.isInteger(offset)||offset<0||offset>10000)throw new AppError('Invalid conversation page.');
  const pattern='%'+query.replace(/[\\%_]/g,'\\$&')+'%';
- const items=await all("SELECT c.id,c.title,c.profile_id,c.project_id,c.favorite,c.mode,c.created,c.updated FROM conversations c WHERE c.owner=? AND (?='' OR c.profile_id=?) AND (?='' OR c.project_id=?) AND (?=0 OR c.favorite=1) AND (?='' OR c.title LIKE ? ESCAPE '\\' OR EXISTS (SELECT 1 FROM conversation_turns t WHERE t.conversation_id=c.id AND t.owner=c.owner AND (t.question LIKE ? ESCAPE '\\' OR t.body LIKE ? ESCAPE '\\'))) ORDER BY c.updated DESC,c.id LIMIT 21 OFFSET ?",owner,profileId||'',profileId||'',projectId||'',projectId||'',params.get('favorite')==='true'?1:0,query,pattern,pattern,pattern,offset);
+ const items=await all("SELECT c.id,c.title,c.profile_id,c.project_id,c.favorite,c.mode,c.created,c.updated FROM conversations c WHERE c.owner=? AND (? IS NULL OR c.created_by=?) AND (?='' OR c.profile_id=?) AND (?='' OR c.project_id=?) AND (?=0 OR c.favorite=1) AND (?='' OR c.title LIKE ? ESCAPE '\\' OR EXISTS (SELECT 1 FROM conversation_turns t WHERE t.conversation_id=c.id AND t.owner=c.owner AND (t.question LIKE ? ESCAPE '\\' OR t.body LIKE ? ESCAPE '\\'))) ORDER BY c.updated DESC,c.id LIMIT 21 OFFSET ?",owner,creator||null,creator||null,profileId||'',profileId||'',projectId||'',projectId||'',params.get('favorite')==='true'?1:0,query,pattern,pattern,pattern,offset);
  return {items:items.slice(0,20),hasMore:items.length>20,nextOffset:items.length>20?offset+20:null};
 }
 export async function persistTurn(turn:any,response:any){

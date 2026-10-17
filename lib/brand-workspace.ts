@@ -7,10 +7,11 @@ export async function saveProfile(owner:string,value:any,record?:string){
  await owned('profiles',record,owner);
  const expected=value.expectedRevision;if(!Number.isSafeInteger(expected)||expected<1)throw new AppError('Provide the saved brand revision. Reload its context before editing.');
  const result=await db().batch([
+  db().prepare("INSERT OR IGNORE INTO profile_versions (id,owner,profile_id,revision,data,archived_at) SELECT ?,owner,id,revision,json_object('name',name,'website',website,'market',market,'competitors',competitors,'audience',audience,'context',context),? FROM profiles WHERE id=? AND owner=? AND revision=?").bind(id(),now(),record,owner,expected),
   db().prepare('UPDATE profiles SET name=?,website=?,market=?,competitors=?,audience=?,context=?,revision=revision+1 WHERE id=? AND owner=? AND revision=?').bind(v.name,v.website,v.market,v.competitors,v.audience,v.context,record,owner,expected),
   db().prepare('UPDATE monitors SET name=?,input=? WHERE managed_profile_id=? AND owner=? AND changes()>0').bind(v.name.slice(0,170)+' · Weekly India',JSON.stringify(managedBrandInput({...v,id:record})),record,owner)
  ]);
- if(!result[0].meta.changes)throw new AppError('This brand changed since you opened it. Copy any draft text you need, then reload the saved context before editing again.',409);
+ if(!result[1].meta.changes)throw new AppError('This brand changed since you opened it. Copy any draft text you need, then reload the saved context before editing again.',409);
  return owned('profiles',record,owner);
 }
 export async function brandWorkspace(record:string,owner:string){
@@ -23,4 +24,15 @@ export async function brandWorkspace(record:string,owner:string){
  one('SELECT id,name,enabled,next_run,error,last_report FROM monitors WHERE owner=? AND managed_profile_id=?',owner,record)
  ]);
  return {profile,counts,reports,projects,files,automaticRule};
+}
+
+export async function profileHistory(record:string,owner:string,before?:string|null){
+ await owned('profiles',record,owner);if(before&&!/^[1-9]\d{0,9}$/.test(before))throw new AppError('Invalid brand history cursor.');
+ const rows=await all('SELECT revision,data,archived_at FROM profile_versions WHERE profile_id=? AND owner=? AND revision<? ORDER BY revision DESC LIMIT 21',record,owner,before?Number(before):2147483647);
+ return {items:rows.slice(0,20).map(r=>({...r,data:JSON.parse(r.data)})),nextCursor:rows.length>20?String(rows[19].revision):null};
+}
+export async function restoreProfile(record:string,owner:string,value:any){
+ if(!Number.isSafeInteger(value.revision)||value.revision<1)throw new AppError('Choose a saved brand revision.');
+ await owned('profiles',record,owner);const version=await one('SELECT data FROM profile_versions WHERE profile_id=? AND owner=? AND revision=?',record,owner,value.revision);if(!version)throw new AppError('Brand revision not found.',404);
+ return saveProfile(owner,{...JSON.parse(version.data),expectedRevision:value.expectedRevision},record);
 }

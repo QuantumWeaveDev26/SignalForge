@@ -1,0 +1,1 @@
+ALTER TABLE `team_members` ADD `email` text DEFAULT '' NOT NULL;
