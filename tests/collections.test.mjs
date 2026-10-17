@@ -18,6 +18,7 @@ const inputs={template:'brand',subject:'Example brand',question:'What evidence s
 const steps=[{name:'Positioning',template:'brand',question:'Research positioning.'},{name:'Opportunities',template:'custom',question:'Synthesize the prior evidence into opportunities.'}];
 before(async()=>{
  const result=await build({stdin:{resolveDir:process.cwd(),contents:`
+ import {GET as portalGet,POST as portalPost} from './app/api/portal/[[...path]]/route.ts';
  import {GET,POST,PATCH,DELETE} from './app/api/workspace/[[...path]]/route.ts';
  import {POST as webhook} from './app/api/webhooks/openai/route.ts';
  import {POST as monitorTick} from './app/api/monitor-tick/route.ts';
@@ -25,7 +26,7 @@ before(async()=>{
  import {GET as sharedReport} from './app/api/shared/[token]/route.ts';
  import {createTrackedAppRouteRequest} from './node_modules/vinext/dist/server/app-route-handler-runtime.js';
  import {setOwner} from 'fixture-identity'; import {control,inspection} from 'fixture-provider';
- export default {async fetch(request){setOwner(request.headers.get('x-fixture-owner'),request.headers.get('x-fixture-email')); control(request.headers);if(new URL(request.url).pathname==='/fixture')return Response.json(inspection());if(new URL(request.url).pathname==='/api/mcp')return mcp(request);if(new URL(request.url).pathname==='/api/webhooks/openai')return webhook(request);if(new URL(request.url).pathname==='/api/monitor-tick')return monitorTick(request);if(new URL(request.url).pathname.startsWith('/api/shared/'))return sharedReport(request);return ({GET,POST,PATCH,DELETE})[request.method](createTrackedAppRouteRequest(request).request);}};`},bundle:true,write:false,format:'esm',platform:'browser',external:['cloudflare:workers','node:*'],plugins:[{name:'workspace-fixtures',setup(b){
+ export default {async fetch(request){setOwner(request.headers.get('x-fixture-owner'),request.headers.get('x-fixture-email')); control(request.headers);if(new URL(request.url).pathname.startsWith('/api/portal'))return ({GET:portalGet,POST:portalPost})[request.method](createTrackedAppRouteRequest(request).request);if(new URL(request.url).pathname==='/fixture')return Response.json(inspection());if(new URL(request.url).pathname==='/api/mcp')return mcp(request);if(new URL(request.url).pathname==='/api/webhooks/openai')return webhook(request);if(new URL(request.url).pathname==='/api/monitor-tick')return monitorTick(request);if(new URL(request.url).pathname.startsWith('/api/shared/'))return sharedReport(request);return ({GET,POST,PATCH,DELETE})[request.method](createTrackedAppRouteRequest(request).request);}};`},bundle:true,write:false,format:'esm',platform:'browser',external:['cloudflare:workers','node:*'],plugins:[{name:'workspace-fixtures',setup(b){
    b.onResolve({filter:/application-auth$|^fixture-identity$/},()=>({path:'identity',namespace:'fixture'}));
    b.onResolve({filter:/(^|\/)provider$|^fixture-provider$/},()=>({path:'provider',namespace:'fixture'}));
    b.onResolve({filter:/^@\//},args=>({path:path.resolve(args.path.replace(/^@\//,'')+'.ts')}));
@@ -874,4 +875,119 @@ test('Workspace count limit also applies atomically when joining an invitation',
  const user='team-limit-user',email='limit-user@example.com';for(let i=0;i<10;i++)assert.equal((await call('/teams','POST',{name:'Limit '+i},user)).status,200);assert.equal((await call('/teams','POST',{name:'Over limit'},user)).status,400);
  const workspace=(await call('/teams','POST',{name:'Other workspace'},'team-limit-owner')).value.id,invite=(await call('/teams/'+workspace+'/invites','POST',{email,role:'viewer'},'team-limit-owner')).value;
  assert.equal((await call('/teams/accept','POST',{token:invite.token},user,{'x-fixture-email':email})).status,403);assert.equal((await db.prepare('SELECT count(*) AS n FROM team_members WHERE user_id=?').bind(user).first()).n,10);
+});
+
+async function portalCall(endpoint='',method='GET',body,user='portal-client',email='client@example.com',extra={}){
+ const r=await runtime.dispatchFetch(origin+'/api/portal'+endpoint,{method,headers:{Origin:origin,'Content-Type':'application/json','x-fixture-owner':user,'x-fixture-email':email,...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
+ return {status:r.status,headers:r.headers,value:await r.json()};
+}
+async function portalFixture(owner='portal-owner'){
+ const time=new Date().toISOString(),reportId=crypto.randomUUID();
+ await db.prepare("INSERT INTO reports (id,owner,title,template,subject,market,question,input,status,body,sources,usage,created,updated,share_token,error) VALUES (?,?,?,'brand','Private subject','India','Private question','{\"context\":\"PRIVATE CONTEXT\"}','completed','PUBLIC SNAPSHOT',?,'{\"total_tokens\":9876}',?,?,'PRIVATE SHARE TOKEN','PRIVATE ERROR')").bind(reportId,owner,'Approved research',JSON.stringify([{title:'Evidence',url:'https://example.com/source',cited:true},{title:'Unsafe',url:'javascript:alert(1)'}]),time,time).run();
+ const made=await call('/client-portals','POST',{name:'Client A confidential portal'},owner);assert.equal(made.status,200);
+ const portal=made.value.id,preview=await call('/client-portals/preview','POST',{kind:'report',sourceId:reportId,expectedUpdated:time},owner);assert.equal(preview.status,200);
+ const published=await call('/client-portals/'+portal+'/items','POST',{kind:'report',sourceId:reportId,expectedUpdated:time,acknowledged:true},owner);assert.equal(published.status,200);
+ const invited=await call('/client-portals/'+portal+'/grants','POST',{email:'Client@Example.com',comment:false,download:false,days:30},owner);assert.equal(invited.status,200);
+ return {owner,reportId,time,portal,item:published.value.id,grant:invited.value.id,token:invited.value.token};
+}
+
+test('Client portal invitations require the exact verified email, explicit acceptance and a session, independent of team cookies',async()=>{
+ const p=await portalFixture('portal-identities');
+ assert.equal((await portalCall()).value.items.length,0);
+ assert.equal((await portalCall('/'+p.portal)).status,404);
+ assert.equal((await portalCall('/accept','POST',{token:p.token},'intruder','wrong@example.com')).status,403);
+ assert.equal((await portalCall('/accept','POST',{token:p.token},'', 'client@example.com')).status,401);
+ assert.equal((await portalCall('/accept','POST',{token:p.token},'portal-client','client@example.com',{Authorization:'Bearer fake'})).status,401);
+ assert.equal((await portalCall('/accept','POST',{token:p.token},'portal-client','client@example.com',{Origin:'https://evil.example'})).status,403);
+ const accepted=await portalCall('/accept','POST',{token:p.token},'portal-client','client@example.com',{Cookie:'sf_workspace=removed-team'});assert.equal(accepted.status,200);
+ const v=await portalCall('/'+p.portal,'GET',undefined,'portal-client','client@example.com',{Cookie:'sf_workspace=removed-team'});assert.equal(v.status,200);assert.match(v.headers.get('cache-control'),/no-store/);assert.equal(v.headers.get('referrer-policy'),'no-referrer');
+ assert.equal((await portalCall('/accept','POST',{token:p.token})).status,403,'An accepted invitation is one-use');
+ assert.equal((await portalCall('/'+p.portal,'GET',undefined,'another-account','client@example.com')).status,404,'Stable user binding prevents account inheritance');
+ assert.equal((await portalCall('/'+p.portal,'GET',undefined,'portal-client','new@example.com')).status,404,'Email changes do not retain disclosure rights');
+ assert.equal((await db.prepare('SELECT count(*) AS n FROM team_members WHERE user_id=?').bind('portal-client').first()).n,0);
+ const own=await call('','GET',undefined,'portal-client');assert.ok(!own.value.reports.some(r=>r.id===p.reportId));assert.equal((await call('/reports/'+p.reportId,'GET',undefined,'portal-client')).status,404);
+});
+
+test('Portal snapshots are immutable allowlisted disclosures; source changes, private context, credentials and files stay internal',async()=>{
+ const p=await portalFixture('portal-snapshot');await portalCall('/accept','POST',{token:p.token});
+ await db.prepare("UPDATE reports SET body='PRIVATE NEW DRAFT',updated='2099-01-01' WHERE id=?").bind(p.reportId).run();
+ const v=await portalCall('/'+p.portal);assert.equal(v.status,200);const item=v.value.items[0];assert.equal(item.body,'PUBLIC SNAPSHOT');assert.equal(item.sources.length,2);assert.equal(item.sources[1].url,'');
+ for(const text of ['PRIVATE','9876',p.reportId,'shareToken','usage','question','input','owner','profileId','sourceId'])assert.ok(!JSON.stringify(v.value).includes(text),text+' must be omitted');
+ assert.equal((await call('/client-portals/preview','POST',{kind:'report',sourceId:p.reportId,expectedUpdated:p.time},p.owner)).status,409);
+ assert.equal((await call('/client-portals/'+p.portal+'/items','POST',{kind:'report',sourceId:p.reportId,expectedUpdated:'2099-01-01',acknowledged:false},p.owner)).status,400);
+ assert.equal((await call('/client-portals/'+p.portal,'GET',undefined,'foreign-owner')).status,404);
+ assert.equal((await portalCall('/'+p.portal+'/items/foreign/comments')).status,404);
+});
+
+test('Client comment/download permissions are enforced on direct endpoints and updates, with isolated idempotent threads',async()=>{
+ const p=await portalFixture('portal-scopes');await portalCall('/accept','POST',{token:p.token});
+ const base='/'+p.portal+'/items/'+p.item;
+ assert.equal((await portalCall(base+'/comments','POST',{body:'Please explain',requestId:crypto.randomUUID()})).status,403);
+ let r=await runtime.dispatchFetch(origin+'/api/portal'+base+'/download',{headers:{'x-fixture-owner':'portal-client','x-fixture-email':'client@example.com'}});assert.equal(r.status,403);
+ let g=(await call('/client-portals/'+p.portal,'GET',undefined,p.owner)).value.grants[0];assert.ok(!('digest' in g));assert.ok(!('token' in g));
+ assert.equal((await call('/client-portals/'+p.portal+'/grants/'+p.grant,'PATCH',{comment:true,download:true,days:5,expectedRevision:g.revision-1},p.owner)).status,409);
+ assert.equal((await call('/client-portals/'+p.portal+'/grants/'+p.grant,'PATCH',{comment:true,download:true,days:5,expectedRevision:g.revision},p.owner)).status,200);
+ const requestId=crypto.randomUUID();assert.equal((await portalCall(base+'/comments','POST',{body:'Client A private message',requestId})).status,200);assert.equal((await portalCall(base+'/comments','POST',{body:'Client A private message',requestId})).status,200);
+ assert.equal((await portalCall(base+'/comments')).value.items.length,1);
+ assert.equal((await portalCall(base+'/comments','POST',{body:'Spoof',requestId:crypto.randomUUID(),author:'Owner',decision:'approved'})).status,400);
+ const inviteB=await call('/client-portals/'+p.portal+'/grants','POST',{email:'b@example.com',comment:true,download:true,days:5},p.owner);await portalCall('/accept','POST',{token:inviteB.value.token},'client-b','b@example.com');
+ assert.equal((await portalCall(base+'/comments','GET',undefined,'client-b','b@example.com')).value.items.length,0);
+ assert.equal((await call('/client-portals/'+p.portal+'/comments','POST',{grantId:p.grant,itemId:p.item,body:'Owner reply only to A',requestId:crypto.randomUUID()},p.owner)).status,200);
+ assert.equal((await portalCall(base+'/comments')).value.items.length,2);assert.equal((await portalCall(base+'/comments','GET',undefined,'client-b','b@example.com')).value.items.length,0);
+ r=await runtime.dispatchFetch(origin+'/api/portal'+base+'/download',{headers:{'x-fixture-owner':'portal-client','x-fixture-email':'client@example.com'}});assert.equal(r.status,200);assert.match(r.headers.get('content-disposition'),/attachment/);assert.match(await r.text(),/PUBLIC SNAPSHOT/);
+ g=(await call('/client-portals/'+p.portal,'GET',undefined,p.owner)).value.grants.find(x=>x.id===p.grant);
+ await call('/client-portals/'+p.portal+'/grants/'+p.grant,'PATCH',{comment:false,download:false,days:5,expectedRevision:g.revision},p.owner);
+ assert.equal((await portalCall(base+'/comments','POST',{body:'Must be denied now',requestId:crypto.randomUUID()})).status,403);
+ r=await runtime.dispatchFetch(origin+'/api/portal'+base+'/download',{headers:{'x-fixture-owner':'portal-client','x-fixture-email':'client@example.com'}});assert.equal(r.status,403);
+});
+
+test('Revocation, expiry, reissue and snapshot withdrawal immediately deny client routes without deleting internal content',async()=>{
+ const p=await portalFixture('portal-lifecycle');await portalCall('/accept','POST',{token:p.token});
+ const next=await call('/client-portals/'+p.portal+'/grants','POST',{email:'client@example.com',comment:true,download:true,days:1},p.owner);
+ assert.equal((await portalCall('/'+p.portal)).status,404);assert.equal((await portalCall('/accept','POST',{token:p.token})).status,403);
+ await portalCall('/accept','POST',{token:next.value.token});assert.equal((await portalCall('/'+p.portal)).status,200);
+ await call('/client-portals/'+p.portal+'/items/'+p.item,'DELETE',undefined,p.owner);
+ assert.equal((await portalCall('/'+p.portal)).value.items.length,0);assert.equal((await portalCall('/'+p.portal+'/items/'+p.item+'/comments')).status,404);
+ assert.equal((await call('/reports/'+p.reportId,'GET',undefined,p.owner)).status,200);
+ await db.prepare("UPDATE portal_grants SET expires='2000-01-01' WHERE id=?").bind(next.value.id).run();assert.equal((await portalCall('/'+p.portal)).status,404);
+ assert.equal((await portalCall()).value.items.some(x=>x.id===p.portal),false);
+ const fresh=await call('/client-portals/'+p.portal+'/grants','POST',{email:'client@example.com',comment:false,download:false,days:30},p.owner);
+ await call('/client-portals/'+p.portal+'/grants/'+fresh.value.id,'DELETE',undefined,p.owner);assert.equal((await portalCall('/accept','POST',{token:fresh.value.token})).status,403);
+});
+
+test('Team external disclosure is owner-only; client invitations do not grant internal project or attachment access',async()=>{
+ const t=await teamFixture();const base='/client-portals';
+ for(const role of [t.editor,t.viewer]){assert.equal((await call(base,'GET',undefined,role,t.cookie)).status,403);assert.equal((await call(base,'POST',{name:'Forbidden'},role,t.cookie)).status,403);assert.equal((await call('/reports/nonexistent/share','POST',{},role,t.cookie)).status,403);}
+ const made=await call(base,'POST',{name:'Owner portal'},t.owner,t.cookie);assert.equal(made.status,200);
+ const external=await portalCall('/'+made.value.id);assert.equal(external.status,404);
+ assert.equal((await call(base+'/'+made.value.id,'GET',undefined,t.owner)).status,404,'Personal namespace cannot manage a team portal');
+});
+
+test('Pitch publication freezes the exact revision and excludes intake, agency snapshots, file IDs and internal reviews',async()=>{
+ const owner='portal-pitch-owner',p=await portalFixture(owner);
+ const made=await call('/pitches','POST',{input:{name:'Client pitch',client:'Example',market:'India',brief:'PRIVATE INTAKE'},requestId:crypto.randomUUID()},owner);assert.equal(made.status,201);
+ const pitch=made.value;await db.prepare("UPDATE pitches SET body='APPROVED PLAYBOOK',agency='{\"private\":\"SECRET AGENCY\"}',sources='[]' WHERE id=?").bind(pitch.id).run();
+ let result=await call('/client-portals/'+p.portal+'/items','POST',{kind:'pitch',sourceId:pitch.id,expectedRevision:0,acknowledged:true},owner);assert.equal(result.status,409);
+ result=await call('/client-portals/'+p.portal+'/items','POST',{kind:'pitch',sourceId:pitch.id,expectedRevision:pitch.revision,acknowledged:true},owner);assert.equal(result.status,200);
+ await db.prepare("UPDATE pitches SET revision=revision+1,body='UNPUBLISHED REVISION' WHERE id=?").bind(pitch.id).run();await portalCall('/accept','POST',{token:p.token});
+ const read=await portalCall('/'+p.portal);const item=read.value.items.find(s=>s.kind==='pitch');assert.equal(item.body,'APPROVED PLAYBOOK');assert.equal(item.revision,pitch.revision);
+ assert.ok(!JSON.stringify(read.value).match(/SECRET AGENCY|PRIVATE INTAKE|UNPUBLISHED REVISION|attachmentIds|context_snapshot/));
+ assert.equal((await portalCall('/'+p.portal+'/items/'+result.value.id+'/research','POST',{})).status,404);
+});
+
+test('Comment request replay cannot silently succeed on a different snapshot or changed body',async()=>{
+ const p=await portalFixture('portal-comment-replay');const extra=await call('/client-portals/'+p.portal+'/items','POST',{kind:'report',sourceId:p.reportId,expectedUpdated:p.time,acknowledged:true},p.owner);
+ await portalCall('/accept','POST',{token:p.token});const g=(await call('/client-portals/'+p.portal,'GET',undefined,p.owner)).value.grants[0];
+ await call('/client-portals/'+p.portal+'/grants/'+p.grant,'PATCH',{comment:true,download:false,days:30,expectedRevision:g.revision},p.owner);
+ const req=crypto.randomUUID(),base='/'+p.portal+'/items/';assert.equal((await portalCall(base+p.item+'/comments','POST',{body:'Message A',requestId:req})).status,200);
+ assert.equal((await portalCall(base+extra.value.id+'/comments','POST',{body:'Message A',requestId:req})).status,403);
+ assert.equal((await portalCall(base+p.item+'/comments','POST',{body:'Changed body',requestId:req})).status,403);
+ const ownerReq=crypto.randomUUID(),path='/client-portals/'+p.portal+'/comments';assert.equal((await call(path,'POST',{grantId:p.grant,itemId:p.item,body:'Reply A',requestId:ownerReq},p.owner)).status,200);
+ assert.equal((await call(path,'POST',{grantId:p.grant,itemId:extra.value.id,body:'Reply A',requestId:ownerReq},p.owner)).status,403);
+ assert.equal((await portalCall(base+extra.value.id+'/comments')).value.items.length,0);
+});
+
+test('Unsafe legacy sources keep inert citation positions instead of shifting evidence numbers',async()=>{
+ const p=await portalFixture('portal-citation-position');await db.prepare("UPDATE reports SET sources=? WHERE id=?").bind(JSON.stringify([{title:'Unsafe',url:'javascript:alert(1)'},{title:'Second source',url:'https://example.com/second',cited:true}]),p.reportId).run();
+ const v=await call('/client-portals/preview','POST',{kind:'report',sourceId:p.reportId,expectedUpdated:p.time},p.owner);assert.equal(v.status,200);assert.equal(v.value.sources[0].url,'');assert.equal(v.value.sources[1].url,'https://example.com/second');assert.ok(!JSON.stringify(v.value).includes('javascript:'));
 });

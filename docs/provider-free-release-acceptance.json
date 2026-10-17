@@ -33,5 +33,6 @@
   ],
   "migration": "Append-only schema-only migrations0017–0024; existing personal content and legacy key lifetimes retained; no live test seeds",
   "rollback": "Preserve added schema. Before rolling source back to v24/earlier, revoke newly scoped/expiring keys or disable developer access: old authorization code ignores those fields. Team namespaces must not be remapped into personal owners.",
-  "theme": "Current website theme unchanged; no app/site.css edits; exports use existing palette"
+  "theme": "Current website theme unchanged; no app/site.css edits; exports use existing palette",
+  "followup": "External client portals and per-client sharing scopes are implemented in v27; see docs/client-portal-acceptance.json. Remaining internal per-record staff privacy limits still apply."
 }

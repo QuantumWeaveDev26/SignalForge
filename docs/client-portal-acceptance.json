@@ -1,0 +1,45 @@
+{
+  "scope": "Owner-managed external sharing and client portals",
+  "date": "2026-10-17",
+  "sourceFolder": "Canonical C-drive SignalForge folder",
+  "features": [
+    "Separate /portal client experience in the existing theme; no provider accounts or dependencies added",
+    "Workspace owner creates confidentiality-group portals and previews/acknowledges exactly published report text or current pitch revision",
+    "Immutable title/body/source/status snapshots; no intake, agency/file IDs, internal reviews, research credentials, usage, errors or team membership disclosed",
+    "One-use hash-only fragment invitations bound to verified email and accepting stable account; existing sf_workspace selection cannot substitute for client access",
+    "Per-client view with optional private comments and Markdown download; permissions checked server-side, compare-and-swap updates, 1–90 day expiry, immediate subsequent-request revocation/reissue",
+    "Explicit snapshot withdrawal; source edits/deletion do not silently update or erase deliberately published copies",
+    "Recipient-isolated bounded client/owner threads; request replay matches grant, actor, item and body; writes recheck access/expiry/comment/withdrawal in SQL",
+    "Team Owners exclusively manage portal/public-report-link creation and revocation; existing public report links retain separate semantics"
+  ],
+  "verification": {
+    "worker": "89 actual Worker/D1 integration cases in the collections suite, including eight portal access/snapshot/lifecycle/replay/citation cases",
+    "dom": "Four actual portal/manager React DOM tests in Happy DOM, plus existing Workspace regression tests",
+    "fullSuite": "196 passing, zero failures or skips",
+    "typecheck": "Passed",
+    "build": "Passed"
+  },
+  "howTo": [
+    "Open Workspace → Client portals as a verified personal/team owner",
+    "Create a separate portal per client/confidentiality group",
+    "Choose a saved report or pitch, preview all text/source links, acknowledge and publish",
+    "Create an email-bound private invitation; choose comments/downloads and expiry; share its link yourself",
+    "Client signs in with that verified email and explicitly accepts at /portal",
+    "Review and reply to private client threads in the manager view; update permissions, withdraw snapshots or revoke access when needed"
+  ],
+  "limits": [
+    "No authenticated live browser walkthrough claimed; browser-control tools were unavailable. Worker/D1 and actual React DOM checks provide automated evidence, not pixel inspection.",
+    "Download permission controls the provided Markdown export action, not copying, printing, screenshots or already downloaded copies.",
+    "All active recipients in a portal read every published snapshot there. Use separate portals for different disclosure groups. This is not an internal per-record staff ACL system.",
+    "Client comments do not trigger notification emails. Private invitation links are manually shared; no real client invitations or content were seeded in production.",
+    "Up to30 portals/workspace,100 snapshots/portal,100 active client grants/portal,200 messages/snapshot-client thread; latest100 messages displayed.",
+    "External clients receive no team/research execution privileges. Existing staff roles, public report links, provider coverage, Gmail Testing and deferred merchant keys remain otherwise unchanged."
+  ],
+  "migration": "Append-only0025 creates four portal tables and indexes; previous personal/team records remain untouched. No destructive migration or data seeding.",
+  "rollback": "Keep additive tables when reverting code. Older source cannot serve portals; explicitly withdraw/revoke external access before decommissioning. Reverting to v26 also restores its broader Editor public-link policy, so do not rely on the new owner-only gate after that rollback. Existing scoped-key rollback cautions still apply.",
+  "release": {
+    "expectedVersion": 27,
+    "publication": "Native deployment receipt is authoritative; source checks are recorded here before publication.",
+    "github": "Exact source synchronization and exact-head CI are verified after native publication."
+  }
+}

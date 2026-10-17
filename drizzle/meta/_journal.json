@@ -176,6 +176,13 @@
       "when": 1792230507066,
       "tag": "0024_overconfident_silverclaw",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1792236404764,
+      "tag": "0025_overconfident_malcolm_colcord",
+      "breakpoints": true
     }
   ]
 }

@@ -1,3 +1,4 @@
+import {managePortals} from '@/lib/client-portal';
 import {keyOptions,requireKeyScope} from '@/lib/api-access';
 import {pitchReviews,addPitchReview} from '@/lib/pitch-reviews';
 import {workflowHistory,pitchHistory} from '@/lib/work-history';
@@ -28,6 +29,7 @@ async function handle(req:Request){
     const parts=new URL(req.url).pathname.replace(/^\/api\/workspace\/?/,'').split('/').filter(Boolean);const [area,record,action]=parts;
     if(area==='teams'){const result:any=await teamsAction(req,who,parts,method==='GET'||method==='DELETE'?{}:await body(req,2048));if(result.cookie){const {cookie,...data}=result;const res=json(data);res.headers.set('Set-Cookie',cookie);return res;}return json(result);}
     teamPermission(who,method,area,record,action);
+    if(area==='client-portals')return json(await managePortals(req,who,parts,method==='GET'||method==='DELETE'?{}:await body(req,16000)));
     if(who.api&&!['reports','profiles','report-library'].includes(area))throw new AppError('This API key can only read reports and profiles.',403);
     if(who.api)requireKeyScope(who,area==='profiles'?'profiles':'reports');
     if(area==='brand-view'&&method==='POST'&&!record){

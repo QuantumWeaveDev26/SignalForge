@@ -1,10 +1,10 @@
 {
   "site_url": "https://signalforge-research-nr.brandmintai.chatgpt.site",
   "sites_project_id": "appgprj_6acf5cb489c08191a409ea6fa27858a1",
-  "sites_source_commit": "c163b1f39cf79fdada8a229a11c3e0afc5a2fce1",
+  "sites_source_commit": "76893805a28789c03a9a5e1c767492658fbe769d",
   "source_export": "git archive with Windows newline conversion disabled; tracked application blobs and modes checked against exact published Sites commit",
   "synchronized_date": "2026-10-17",
-  "published_version": 26,
+  "published_version": 27,
   "excluded_tracked_files": [
     "tsconfig.tsbuildinfo"
   ],
@@ -21,26 +21,28 @@
     "lockfile_reconciliation": "Canonical version24 restores exactly the two optional @emnapi1.10.0 records, with no existing dependency version changes and no GitHub-only lock override."
   },
   "verification": {
-    "fixture_policy_tests": 184,
-    "worker_d1_integration_tests": 81,
-    "actual_react_dom_tests": 16,
-    "format_schedule_handoff_tests": 10,
-    "authentication": "Real Better Auth test adapter checked session token redaction and revoked-session rejection.",
+    "fixture_policy_tests": 196,
+    "worker_d1_integration_tests": 89,
+    "portal_worker_cases": 8,
+    "actual_react_dom_tests": 20,
+    "portal_react_dom_tests": 4,
     "typecheck": "Passed.",
     "production_build": "Passed.",
-    "clean_install": "Isolated npm11.19 Linux x64 ci dry-run passed; published lockfile unchanged.",
-    "deployment": "Native Sites version26 publish succeeded; existing public site and environment revision9 retained.",
-    "hosted_schema": "Read-only live D1 checks confirmed all10 relevant table/column checks across team membership/invites, brand history, pitch reviews/context snapshots, API usage/scopes/expiry, monitor schedules and conversation authorship. No live test records were inserted.",
-    "provider_calls": "No real research/provider/email requests made for this release.",
+    "lockfile": "Dependencies and published lockfile unchanged from version26; exact blob parity checked.",
+    "deployment": "Native Sites version27 publish succeeded; existing public site and environment revision9 retained.",
+    "security_review": "Bounded read-only review checked snapshot isolation, owner-only grant management, verified email/stable-account binding, expiry/revocation, private threads and permissions. Cross-snapshot/body idempotency and inert unsafe-source citation positions have regression tests.",
+    "provider_calls": "No real research/provider/email calls or real client production seeds made for this release.",
     "limits": [
-      "No authenticated production browser walkthrough or real microphone recording; speech engine mocked for DOM tests.",
-      "PowerPoint OOXML/content/relationships tested; native PowerPoint visual rendering unavailable.",
-      "Not exhaustive Waldo parity; remaining product/external-service limits are stated in README and docs/provider-free-release-acceptance.json."
+      "No authenticated live browser walkthrough; actual React DOM tests are not pixel inspection.",
+      "Download permission controls the provided Markdown export, not copying/printing/screenshots or previous downloads.",
+      "All active recipients of a portal see every published snapshot there; separate portals provide separate disclosure groups, not internal per-record staff ACLs.",
+      "Manual private invitation delivery; no invitation or comment notification emails.",
+      "Native Office visual rendering and real microphone recording remain unverified from prior releases."
     ],
     "github_actions": "Must pass on the exact pushed release commit; see repository Actions history.",
-    "compatibility": "Actual React DOM regression covers UTC fallback for legacy invalid workspace timezone preferences; full suite passed after correction."
+    "hosted_schema_and_http": "Read-only native checks confirmed all four portal tables/columns and no live client records. HTTP smoke: /portal200 client shell; /api/portal401 with private,no-store and no-referrer; /workspace/client-portals307 to login. This is not authenticated browser QA."
   },
-  "schema_migrations": "Append-only schema migrations0017\u20130024; preserve personal content and legacy API-key permissions/lifetimes.",
-  "rollback": "Preserve added schema. Before source rollback to version24 or earlier, revoke new scoped/expiring keys or disable developer access because older authorization ignores those fields. Do not remap team namespaces into personal owners.",
+  "schema_migrations": "Append-only migration0025 creates four portal tables/indexes; existing personal/team records remain untouched.",
+  "rollback": "Preserve additive schema. Explicitly revoke grants/withdraw snapshots before decommissioning portal access. Version26 rollback removes the owner-only team public-link gate. Before version24-or-earlier rollback revoke newly scoped/expiring API keys or disable developer access; never remap team namespaces into personal owners.",
   "theme": "Existing website theme and app/site.css unchanged."
 }

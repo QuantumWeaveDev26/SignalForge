@@ -9,6 +9,7 @@ export async function resolveWorkspace(req:Request,user:any){
  return {...user,accountOwner:user.owner,owner:'team:'+workspaceId,role:member.role,workspaceId,workspaceName:member.name};
 }
 export function teamPermission(who:any,method:string,area?:string,record?:string,action?:string){if(!who.workspaceId)return;
+ if(who.role!=='owner'&&(area==='client-portals'||area==='reports'&&action==='share'&&method!=='GET'))throw new AppError('Only the workspace owner can manage external sharing.',403);
  if(['keys','preferences','monitor-email','demo-pack'].includes(area||'')&&who.role!=='owner')throw new AppError('Only the workspace owner can manage these workspace settings.',403);
  if(who.role==='viewer'&&method!=='GET')throw new AppError('This workspace is read-only for your Viewer role.',403);
  if(['keys','monitor-email'].includes(area||''))throw new AppError('Developer keys and sender settings are managed in your personal workspace. Team-scoped credentials and email delivery are not enabled.',403);

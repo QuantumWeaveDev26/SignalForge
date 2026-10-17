@@ -30,3 +30,7 @@ The missing optional @emnapi/core@1.10.0 and @emnapi/runtime@1.10.0 lock entries
 ## Scoped-key rollback safety
 
 Version25 adds API-key permission scopes and expiry checks with append-only migrations0017–0024. Preserve added schema during a source rollback. Before reverting to version24 or earlier authorization code, revoke newly scoped/expiring keys or disable developer access: older code ignores the new permission and expiry fields. Never remap team namespaces into personal owner identifiers. Team invitations are private, email-bound links shared manually; no invitation email service was activated by this release.
+
+## Client portal release safety
+
+Version27 adds immutable, owner-published client snapshots and email/account-bound grants in append-only migration0025. Keep its tables during rollback. Before decommissioning portal access, explicitly revoke grants or withdraw snapshots; do not assume source deletion recalls published content or prior downloads. Reverting to version26 also removes the new owner-only team public-report-link gate and restores its broader Editor policy. Existing scoped-key rollback precautions still apply. Preserve the public .openai/hosting.json build manifest and Site identity; exclude only private runtime state and credentials.
